@@ -149,7 +149,6 @@ export class TokenMappingService {
 
     try {
       const url = this.getCoingeckoUrl(`coins/${tokenId}/market_chart?vs_currency=usd&days=${days}`, false);
-      console.log('Fetching historical data from:', url);
       const response = await fetch(url);
       
       if (!response.ok) {

@@ -23,7 +23,7 @@ export const CommitmentAnalysisAction: Action = {
     try {
       const text = message.content?.text || '';
       const amountMatch = text.match(/(\d+\.?\d*)\s*(AVAX|ETH|MONAD)/i);
-      const timeMatch = text.match(/(\d+)\s*(days?|months?|weeks?|years?)/i);
+      const timeMatch = text.match(/(\d+)\s*(minutes?|hours?|days?|weeks?|months?|years?)/i);
       
       const priceBasedPattern = text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+until\s+(?:either\s+)?(?:the\s+)?price\s+(?:goes\s+)?(?:up\s+)?to\s+\$?(\d+\.?\d*)\s+(?:or|and)\s+(?:price\s+)?(?:goes\s+)?(?:down\s+)?to\s+\$?(\d+\.?\d*)/i) ||
                                text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+until\s+(?:the\s+)?price\s+(?:reaches|hits)?\s*\$?(\d+\.?\d*)\s+or\s+\$?(\d+\.?\d*)/i) ||
@@ -134,6 +134,8 @@ export const CommitmentAnalysisAction: Action = {
         const unit = timeMatch[2].toLowerCase();
         
         let durationInDays = duration;
+        if (unit.includes('minute')) durationInDays = duration / (24 * 60);
+        if (unit.includes('hour')) durationInDays = duration / 24;
         if (unit.includes('week')) durationInDays *= 7;
         if (unit.includes('month')) durationInDays *= 30;
         if (unit.includes('year')) durationInDays *= 365;
@@ -279,6 +281,45 @@ export const CommitmentAnalysisAction: Action = {
     [
       {
         name: '{{user1}}',
+        content: { text: 'I want to lock 5 AVAX for 2 hours' }
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'Analyzing your short-term commitment proposal with real market data and Fear & Greed Index...',
+          actions: ['FUM_ANALYZE_COMMITMENT']
+        }
+      }
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: { text: 'I want to lock 1 ETH for 30 minutes' }
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'Analyzing your ultra-short commitment proposal with real market data and Fear & Greed Index...',
+          actions: ['FUM_ANALYZE_COMMITMENT']
+        }
+      }
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: { text: 'I want to lock 3 MONAD for 5 days' }
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'Analyzing your daily commitment proposal with real market data and Fear & Greed Index...',
+          actions: ['FUM_ANALYZE_COMMITMENT']
+        }
+      }
+    ],
+    [
+      {
+        name: '{{user1}}',
         content: { text: 'I\'m feeling FOMO about missing out on gains' }
       },
       {
@@ -348,10 +389,29 @@ async function analyzeCommitmentWithRealData(
     tokenInsights.push(`Network: ${validationResult.tokenInfo.network}`);
   }
 
-  if (durationInDays < 30) {
+  if (durationInDays < 1/24) {
+    score -= 25;
+    factors.push('Very short duration (minutes) - minimal behavioral benefits');
+    behavioralInsights.push('Minute-level locks may not provide meaningful commitment value');
+    behavioralInsights.push('Consider longer durations for behavioral change');
+    marketConditions.push('Ultra-short commitments are more suitable for trading than long-term holding');
+  } else if (durationInDays < 1) {
+    score -= 20;
+    factors.push('Short duration (hours) - limited commitment benefits');
+    behavioralInsights.push('Hour-level locks may help with immediate impulse control');
+    behavioralInsights.push('Consider extending to at least 24 hours for better results');
+    marketConditions.push('Hourly commitments useful for testing commitment discipline');
+  } else if (durationInDays < 7) {
     score -= 15;
+    factors.push('Very short duration (days) - minimal behavioral benefits');
+    behavioralInsights.push('Day-level locks may help with daily trading discipline');
+    behavioralInsights.push('Consider weekly commitments for better behavioral change');
+    marketConditions.push('Daily commitments useful for building consistent habits');
+  } else if (durationInDays < 30) {
+    score -= 10;
     factors.push('Short duration may not provide meaningful commitment benefits');
     behavioralInsights.push('Short locks often lead to premature exits during volatility');
+    behavioralInsights.push('Weekly commitments help establish trading discipline');
   } else if (durationInDays > 365) {
     score -= 10;
     factors.push('Very long duration increases opportunity cost and reduces flexibility');
@@ -467,18 +527,36 @@ async function analyzeCommitmentWithRealData(
   if (durationInDays >= 90) {
     behavioralInsights.push('90+ day commitments help break emotional trading patterns');
     behavioralInsights.push('Longer locks reduce FOMO and panic selling impulses');
+  } else if (durationInDays >= 7) {
+    behavioralInsights.push('Weekly commitments help establish trading discipline');
+    behavioralInsights.push('Regular lock periods can reduce impulsive trading decisions');
+  } else if (durationInDays >= 1) {
+    behavioralInsights.push('Daily commitments help with immediate impulse control');
+    behavioralInsights.push('Short-term locks can be stepping stones to longer commitments');
+  } else if (durationInDays >= 1/24) {
+    behavioralInsights.push('Hourly commitments useful for testing commitment discipline');
+    behavioralInsights.push('Short locks help build the habit of delayed gratification');
+  } else {
+    behavioralInsights.push('Minute-level locks may help with immediate trading discipline');
+    behavioralInsights.push('Consider longer durations for meaningful behavioral change');
   }
 
   if (tokenSymbol === 'AVAX') {
-    suggestedOptimizations.push('Consider staking AVAX for additional yield during lock period');
+    if (durationInDays >= 7) {
+      suggestedOptimizations.push('Consider staking AVAX for additional yield during lock period');
+    }
     suggestedOptimizations.push('Monitor Avalanche network activity for ecosystem growth signals');
     tokenInsights.push('AVAX is the native token of the Avalanche network');
   } else if (tokenSymbol === 'ETH') {
-    suggestedOptimizations.push('Consider staking ETH for additional yield during lock period');
+    if (durationInDays >= 7) {
+      suggestedOptimizations.push('Consider staking ETH for additional yield during lock period');
+    }
     suggestedOptimizations.push('Monitor Ethereum network upgrades and DeFi ecosystem growth');
     tokenInsights.push('ETH is the native token of the Ethereum network');
   } else if (tokenSymbol === 'MONAD') {
-    suggestedOptimizations.push('Consider staking MONAD for additional yield during lock period');
+    if (durationInDays >= 7) {
+      suggestedOptimizations.push('Consider staking MONAD for additional yield during lock period');
+    }
     suggestedOptimizations.push('Monitor Monad network activity for ecosystem growth signals');
     tokenInsights.push('MONAD is the native token of the Monad network');
   }
@@ -506,6 +584,24 @@ async function analyzeCommitmentWithRealData(
     suggestedOptimizations.push('Extend duration to capture full recovery cycle');
   }
 
+  if (durationInDays < 1/24) {
+    suggestedOptimizations.push('Consider extending to at least 1 hour for better behavioral benefits');
+    suggestedOptimizations.push('Use minute-level locks for immediate impulse control only');
+    suggestedOptimizations.push('Gradually increase duration to build longer-term discipline');
+  } else if (durationInDays < 1) {
+    suggestedOptimizations.push('Consider extending to 24 hours for better commitment value');
+    suggestedOptimizations.push('Use hourly locks as stepping stones to daily commitments');
+    suggestedOptimizations.push('Monitor your behavior during the lock period');
+  } else if (durationInDays < 7) {
+    suggestedOptimizations.push('Consider extending to a full week for better behavioral change');
+    suggestedOptimizations.push('Use daily locks to build consistent trading discipline');
+    suggestedOptimizations.push('Track your emotional responses during the lock period');
+  } else if (durationInDays < 30) {
+    suggestedOptimizations.push('Consider extending to a full month for optimal behavioral benefits');
+    suggestedOptimizations.push('Weekly commitments help establish regular trading patterns');
+    suggestedOptimizations.push('Use this period to develop longer-term thinking');
+  }
+
   let recommendation: CommitmentAnalysis['recommendation'] = 'NEUTRAL';
   if (score >= 85) recommendation = 'HIGHLY_RECOMMENDED';
   else if (score >= 70) recommendation = 'RECOMMENDED';
@@ -526,7 +622,10 @@ async function analyzeCommitmentWithRealData(
   );
 
   const durationUnit = durationInDays >= 365 ? 'years' : 
-                      durationInDays >= 30 ? 'months' : 'days';
+                      durationInDays >= 30 ? 'months' : 
+                      durationInDays >= 7 ? 'weeks' :
+                      durationInDays >= 1 ? 'days' :
+                      durationInDays >= 1/24 ? 'hours' : 'minutes';
 
   const expectedReturn = await calculateExpectedReturn(
     amount,

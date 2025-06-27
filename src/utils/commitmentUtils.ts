@@ -1,5 +1,27 @@
 import { FearGreedData, PricePrediction, EnhancedCommitmentAnalysis, PriceBasedCommitmentAnalysis, ExpectedReturn } from "../types";
 
+export function formatTimeUnit(days: number): string {
+  if (days < 1/24) {
+    const minutes = Math.round(days * 24 * 60);
+    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+  } else if (days < 1) {
+    const hours = Math.round(days * 24);
+    return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  } else if (days < 7) {
+    const dayCount = Math.round(days);
+    return `${dayCount} day${dayCount !== 1 ? 's' : ''}`;
+  } else if (days < 30) {
+    const weeks = Math.round(days / 7);
+    return `${weeks} week${weeks !== 1 ? 's' : ''}`;
+  } else if (days < 365) {
+    const months = Math.round(days / 30);
+    return `${months} month${months !== 1 ? 's' : ''}`;
+  } else {
+    const years = Math.round(days / 365);
+    return `${years} year${years !== 1 ? 's' : ''}`;
+  }
+}
+
 export function calculateVolatility(prices: number[][]): number {
   if (prices.length < 2) return 0;
 
@@ -99,11 +121,29 @@ export function formatCommitmentResponse(
 
   const formatPricePredictions = (predictions: PricePrediction[]): string => {
     return predictions.map(p => {
-      const dateStr = p.targetDate.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: p.targetDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
-      });
+      let dateStr;
+      const now = new Date();
+      const timeDiff = p.targetDate.getTime() - now.getTime();
+      const hoursDiff = timeDiff / (1000 * 60 * 60);
+      const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+      
+      if (daysDiff < 1) {
+        if (hoursDiff < 1) {
+          const minutesDiff = timeDiff / (1000 * 60);
+          dateStr = `${Math.round(minutesDiff)} minutes`;
+        } else {
+          dateStr = `${Math.round(hoursDiff)} hours`;
+        }
+      } else if (daysDiff < 7) {
+        dateStr = `${Math.round(daysDiff)} days`;
+      } else {
+        dateStr = p.targetDate.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: p.targetDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+        });
+      }
+      
       const confidenceEmoji = p.confidence >= 0.7 ? '🟢' : p.confidence >= 0.5 ? '🟡' : '🔴';
       return `• ${dateStr}: $${formatCurrency(p.predictedPrice)} (${p.priceChangePercentage > 0 ? '+' : ''}${formatPercentage(p.priceChangePercentage)}%) ${confidenceEmoji}`;
     }).join('\n');
@@ -177,16 +217,27 @@ export function formatGeneralAnalysis(text: string, fearGreedData: FearGreedData
   **Supported Tokens:**
   • **AVAX** - Native Avalanche token
   • **ETH** - Native Ethereum token
+  • **MONAD** - Native Monad token
 
   **Example Commitments:**
   • "I want to lock 10 AVAX for 3 months"
-  • "Lock 2 ETH until price reaches $5000 or $3000"
-  • "Commit 5 ETH for 6 months"
+  • "Lock 2 ETH for 2 hours"
+  • "Commit 5 MONAD for 30 minutes"
+  • "Lock 3 ETH until price reaches $5000 or $3000"
+  • "Commit 1 AVAX for 5 days"
+
+  **Duration Options:**
+  • **Minutes:** For immediate impulse control (30 minutes, 1 hour)
+  • **Hours:** For short-term discipline (2 hours, 6 hours, 12 hours)
+  • **Days:** For daily trading discipline (1 day, 3 days, 5 days)
+  • **Weeks/Months:** For behavioral change (1 week, 1 month, 3 months)
+  • **Years:** For long-term holding (6 months, 1 year)
 
   **Network Benefits:**
   • **Avalanche:** Fast finality and low transaction costs
   • **Ethereum:** Largest DeFi ecosystem and network effects
-  • Both networks offer reliable price data and security
+  • **Monad:** High-performance blockchain with parallel execution
+  • All networks offer reliable price data and security
 
   Please provide a specific commitment proposal for detailed analysis.`;
 }
@@ -269,14 +320,14 @@ export function formatPriceBasedCommitmentResponse(
 
   **📈 Up Target Analysis ($${formatCurrency(upTarget)}):**
   • Probability: ${formatPercentage(upTargetAnalysis.probability * 100)}%
-  • Expected Time: ${upTargetAnalysis.expectedDays} days
+  • Expected Time: ${formatTimeUnit(upTargetAnalysis.expectedDays)}
   • Confidence: ${formatPercentage(upTargetAnalysis.confidence * 100)}%
   • Risk Factors: ${upTargetAnalysis.riskFactors.length > 0 ? upTargetAnalysis.riskFactors.join(', ') : 'None'}
   • Market Conditions: ${upTargetAnalysis.marketConditions.length > 0 ? upTargetAnalysis.marketConditions.join(', ') : 'Neutral'}
 
   **📉 Down Target Analysis ($${formatCurrency(downTarget)}):**
   • Probability: ${formatPercentage(downTargetAnalysis.probability * 100)}%
-  • Expected Time: ${downTargetAnalysis.expectedDays} days
+  • Expected Time: ${formatTimeUnit(downTargetAnalysis.expectedDays)}
   • Confidence: ${formatPercentage(downTargetAnalysis.confidence * 100)}%
   • Risk Factors: ${downTargetAnalysis.riskFactors.length > 0 ? downTargetAnalysis.riskFactors.join(', ') : 'None'}
   • Market Conditions: ${downTargetAnalysis.marketConditions.length > 0 ? downTargetAnalysis.marketConditions.join(', ') : 'Neutral'}
@@ -289,9 +340,9 @@ export function formatPriceBasedCommitmentResponse(
   • Worst Case: ${expectedReturn.worstCase > 0 ? '+' : ''}${formatPercentage(expectedReturn.worstCase)}%
 
   **⏱️ Time to Reach Targets:**
-  • Up Target: ${timeToReachTargets.upTarget} days
-  • Down Target: ${timeToReachTargets.downTarget} days
-  • Average Time: ${timeToReachTargets.averageTime} days
+  • Up Target: ${formatTimeUnit(timeToReachTargets.upTarget)}
+  • Down Target: ${formatTimeUnit(timeToReachTargets.downTarget)}
+  • Average Time: ${formatTimeUnit(timeToReachTargets.averageTime)}
 
   **💡 Key Insights:**
   ${insights.map(insight => `• ${insight}`).join('\n')}
@@ -311,16 +362,67 @@ export async function calculatePricePredictions(
 ): Promise<PricePrediction[]> {
   const predictions: PricePrediction[] = [];
 
-  const timePoints = [
-    { days: 7, label: '1 week' },
-    { days: 30, label: '1 month' },
-    { days: 90, label: '3 months' },
-    { days: 180, label: '6 months' },
-    { days: 365, label: '1 year' }
-  ].filter(tp => tp.days <= durationInDays);
+  let timePoints = [];
+  
+  if (durationInDays < 1) {
+    timePoints = [
+      { days: 1/24, label: '1 hour' },
+      { days: 1/12, label: '2 hours' },
+      { days: 1/6, label: '4 hours' },
+      { days: 1/3, label: '8 hours' },
+      { days: 1/2, label: '12 hours' },
+      { days: 1, label: '1 day' }
+    ].filter(tp => tp.days <= durationInDays);
+    
+    if (timePoints.length === 0) {
+      timePoints.push({ 
+        days: durationInDays, 
+        label: durationInDays < 1/24 ? `${Math.round(durationInDays * 24 * 60)} minutes` :
+               durationInDays < 1 ? `${Math.round(durationInDays * 24)} hours` : '1 day'
+      });
+    }
+  } else if (durationInDays < 7) {
+    timePoints = [
+      { days: 1, label: '1 day' },
+      { days: 3, label: '3 days' },
+      { days: 7, label: '1 week' }
+    ].filter(tp => tp.days <= durationInDays);
+    
+    if (timePoints.length === 0) {
+      timePoints.push({ 
+        days: durationInDays, 
+        label: `${Math.round(durationInDays)} days`
+      });
+    }
+  } else {
+    timePoints = [
+      { days: 7, label: '1 week' },
+      { days: 30, label: '1 month' },
+      { days: 90, label: '3 months' },
+      { days: 180, label: '6 months' },
+      { days: 365, label: '1 year' }
+    ].filter(tp => tp.days <= durationInDays);
+    
+    if (timePoints.length === 0) {
+      timePoints.push({ 
+        days: durationInDays, 
+        label: `${Math.round(durationInDays / 30)} months`
+      });
+    }
+  }
 
   if (durationInDays > 365) {
     timePoints.push({ days: durationInDays, label: `${Math.round(durationInDays / 30)} months` });
+  }
+
+  if (timePoints.length === 0) {
+    timePoints.push({ 
+      days: durationInDays, 
+      label: durationInDays < 1/24 ? `${Math.round(durationInDays * 24 * 60)} minutes` :
+             durationInDays < 1 ? `${Math.round(durationInDays * 24)} hours` :
+             durationInDays < 7 ? `${Math.round(durationInDays)} days` :
+             `${Math.round(durationInDays / 30)} months`
+    });
   }
 
   for (const timePoint of timePoints) {
@@ -356,8 +458,16 @@ export async function calculatePricePredictions(
       const basePrediction = currentPrice * (1 + expectedReturn * sentimentMultiplier);
       predictedPrice = basePrediction;
 
-      confidence = Math.max(0.1, Math.min(0.8, 0.4 +
-        (timePoint.days < 30 ? 0.2 : 0) +
+      let durationConfidence = 0.4;
+      if (timePoint.days < 1) {
+        durationConfidence = 0.6;
+      } else if (timePoint.days < 7) {
+        durationConfidence = 0.5;
+      } else if (timePoint.days < 30) {
+        durationConfidence = 0.4;
+      }
+
+      confidence = Math.max(0.1, Math.min(0.8, durationConfidence +
         (volatility < 0.5 ? 0.1 : -0.1) +
         (historicalData.length > 100 ? 0.1 : -0.1) +
         (fearGreedData ? 0.1 : 0)
@@ -389,7 +499,15 @@ export async function calculatePricePredictions(
       }
 
       predictedPrice = currentPrice * (1 + (timePoint.days / 365) * 0.15 * trendMultiplier);
-      confidence = 0.25;
+      
+      if (timePoint.days < 1) {
+        confidence = 0.3;
+      } else if (timePoint.days < 7) {
+        confidence = 0.25;
+      } else {
+        confidence = 0.25;
+      }
+      
       factors.push('Limited historical data available for prediction');
     }
 
@@ -418,25 +536,75 @@ export async function calculateExpectedReturn(
 ): Promise<ExpectedReturn> {
   const initialInvestment = amount * currentPrice;
 
+  if (pricePredictions.length === 0) {
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + durationInDays);
+    
+    const fallbackPrediction: PricePrediction = {
+      targetDate,
+      predictedPrice: currentPrice,
+      confidence: 0.3,
+      priceChange: 0,
+      priceChangePercentage: 0,
+      factors: ['Fallback prediction due to insufficient data']
+    };
+    
+    pricePredictions = [fallbackPrediction];
+  }
+
+  let tolerance = 7;
+  if (durationInDays < 1) {
+    tolerance = 0.1;
+  } else if (durationInDays < 7) {
+    tolerance = 1;
+  } else if (durationInDays < 30) {
+    tolerance = 3;
+  }
+
   const endPrediction = pricePredictions.find(p => {
     const daysDiff = Math.abs((p.targetDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-    return Math.abs(daysDiff - durationInDays) < 7;
+    return Math.abs(daysDiff - durationInDays) < tolerance;
   }) || pricePredictions[pricePredictions.length - 1];
+
+  if (!endPrediction) {
+    throw new Error('No valid price prediction found for the specified duration');
+  }
 
   const predictedValue = amount * endPrediction.predictedPrice;
   const expectedReturn = predictedValue - initialInvestment;
   const expectedReturnPercentage = (expectedReturn / initialInvestment) * 100;
 
-  const confidenceRange = (1 - endPrediction.confidence) * 1.5;
+  let confidenceRange = (1 - endPrediction.confidence) * 1.5;
+  if (durationInDays < 1) {
+    confidenceRange *= 0.5;
+  } else if (durationInDays < 7) {
+    confidenceRange *= 0.8;
+  }
 
   let bestCaseScenario = predictedValue * (1 + confidenceRange);
   let worstCaseScenario = predictedValue * (1 - confidenceRange);
 
-  const maxLossPercentage = 0.4;
+  let maxLossPercentage = 0.4;
+  if (durationInDays < 1) {
+    maxLossPercentage = 0.1;
+  } else if (durationInDays < 7) {
+    maxLossPercentage = 0.2;
+  } else if (durationInDays < 30) {
+    maxLossPercentage = 0.3;
+  }
+
   const minValue = initialInvestment * (1 - maxLossPercentage);
   worstCaseScenario = Math.max(worstCaseScenario, minValue);
 
-  const maxGainMultiplier = 2.0;
+  let maxGainMultiplier = 2.0;
+  if (durationInDays < 1) {
+    maxGainMultiplier = 0.1;
+  } else if (durationInDays < 7) {
+    maxGainMultiplier = 0.5;
+  } else if (durationInDays < 30) {
+    maxGainMultiplier = 1.0;
+  }
+
   const maxBestCase = initialInvestment + (expectedReturn * maxGainMultiplier);
   bestCaseScenario = Math.min(bestCaseScenario, maxBestCase);
 
