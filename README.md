@@ -174,6 +174,12 @@ The system parses user input to identify:
 ```bash
 # Market data API keys
 COINGECKO_API_KEY=your_api_key
+
+# Model Providers
+OPENAI_API_KEY=your_api_key
+
+# Postgres Url (Optional)
+POSTGRES_URL=your_postgres_url
 ```
 
 ## 📄 License

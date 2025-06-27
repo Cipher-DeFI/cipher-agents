@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "@elizaos/project-starter",
+      "name": "fum-ai-agents",
       "dependencies": {
         "@elizaos/cli": "latest",
         "@elizaos/core": "latest",
