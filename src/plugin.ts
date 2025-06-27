@@ -1,6 +1,7 @@
 import type { Plugin, IAgentRuntime } from '@elizaos/core';
 import { CommitmentAnalysisAction } from './actions/commitmentAnalysis';
 import { MarketDataProvider } from './providers/marketData';
+import { apiMessageRoute } from './api-routes';
 
 export const fumPlugin: Plugin = {
   name: 'fum',
@@ -13,6 +14,11 @@ export const fumPlugin: Plugin = {
   providers: [
     MarketDataProvider,
   ],
+
+  routes: [
+    apiMessageRoute,
+  ],
+
     
   init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
     console.log('✨ F.U.M Plugin initialized');
