@@ -1,10 +1,10 @@
 # FUM AI Agents - Vault Locking Commitment Analysis
 
-A sophisticated AI-powered commitment analysis system for Avalanche network tokens, designed to help users make informed decisions about locking their crypto assets for behavioral improvement and long-term holding strategies.
+A sophisticated AI-powered commitment analysis system for supported crypto tokens, designed to help users make informed decisions about locking their crypto assets for behavioral improvement and long-term holding strategies.
 
 ## 🏔️ What is FUM AI Agents?
 
-FUM AI Agents is an intelligent system that analyzes crypto vault locking commitment proposals using real market data, behavioral psychology insights, and the Fear & Greed Index. It provides comprehensive analysis for users who want to lock their Avalanche tokens to improve their trading behavior and avoid emotional decision-making.
+FUM AI Agents is an intelligent system that analyzes crypto vault locking commitment proposals using real market data, behavioral psychology insights, and the Fear & Greed Index. It provides comprehensive analysis for users who want to lock their supported tokens to improve their trading behavior and avoid emotional decision-making.
 
 ## ✨ Key Features
 
@@ -12,7 +12,7 @@ FUM AI Agents is an intelligent system that analyzes crypto vault locking commit
 - **Time-based commitments**: Analyze locking tokens for specific durations (days, weeks, months, years)
 - **Price-based commitments**: Set price targets for automatic unlocking (e.g., "lock until price reaches $50 or $30")
 - **Real-time market data**: Uses live price feeds and historical data for accurate analysis
-- **Avalanche network integration**: Native support for Avalanche C-Chain tokens
+- **Multi-network support**: Native support for multiple blockchain networks
 
 ### 📊 Advanced Analytics
 - **Commitment scoring**: 0-100 score based on multiple factors
@@ -22,13 +22,10 @@ FUM AI Agents is an intelligent system that analyzes crypto vault locking commit
 - **Price predictions**: AI-powered price forecasting with confidence levels
 - **Expected returns**: Detailed ROI analysis with best/worst case scenarios
 
-### 🏔️ Supported Avalanche Tokens
-- **AVAX** - Native Avalanche token (Chainlink price feed)
-- **WAVAX** - Wrapped AVAX for DeFi (Chainlink price feed)
-- **USDC.E** - Avalanche Bridged USDC (Chainlink price feed)
-- **USDT.E** - Tether Avalanche Bridged (Chainlink price feed)
-- **JOE** - JoeToken (limited price feed support)
-- **PNG** - Pangolin (limited price feed support)
+### 🪙 Supported Tokens
+- **AVAX** - Native Avalanche token
+- **ETH** - Native Ethereum token
+- **MONAD** - Native Monad token
 
 ## 🚀 Quick Start
 
@@ -66,7 +63,7 @@ curl -X POST http://localhost:3000/api/message \
 curl -X POST http://localhost:3000/api/message \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "Lock 5 AVAX until price reaches $50 or $30"
+    "text": "Lock 2 ETH until price reaches $5000 or $3000"
   }'
 ```
 
@@ -84,11 +81,11 @@ The API returns structured data with AI analysis:
     "analysis": {
       "score": 75,
       "recommendation": "RECOMMENDED",
-      "factors": ["Token has reliable Chainlink price feed", "..."],
+      "factors": ["Token is supported by FUMVault", "..."],
       "riskLevel": "MODERATE",
       "behavioralInsights": ["3-6 month commitments align with market cycles", "..."],
       "marketConditions": ["Asset trading below recent highs", "..."],
-      "suggestedOptimizations": ["Consider staking AVAX for yield", "..."],
+      "suggestedOptimizations": ["Consider staking for additional yield", "..."],
       "fearGreedInsights": ["Fear periods historically mark bottoms", "..."],
       "expectedReturn": {
         "duration": 90,
@@ -125,9 +122,9 @@ The system parses user input to identify:
 - General market queries
 
 ### 2. Token Validation
-- Validates tokens on Avalanche C-Chain
-- Checks for Chainlink price feed availability
-- Verifies smart contract existence
+- Validates tokens against supported token list
+- Checks for reliable price data availability
+- Verifies token legitimacy and network support
 
 ### 3. Market Data Analysis
 - Fetches real-time price data
@@ -153,12 +150,15 @@ The system parses user input to identify:
 - **API Routes** (`src/api-routes.ts`): REST API endpoints
 - **Actions** (`src/actions/commitmentAnalysis.ts`): Core analysis logic
 - **Services** (`src/services/`): External data providers
+  - `supportedTokenMapping.ts`: Token validation and support
+  - `marketData.ts`: Market data and Fear & Greed Index
+  - `tokenMapping.ts`: Base token mapping functionality
 - **Utils** (`src/utils/commitmentUtils.ts`): Analysis calculations
 - **Types** (`src/types.ts`): TypeScript type definitions
 
 ### Key Dependencies
 - **@elizaos/core**: AI agent framework
-- **Avalanche integration**: Token validation and price feeds
+- **Multi-network support**: Token validation across networks
 - **Market data APIs**: Real-time crypto data
 - **Fear & Greed Index**: Market sentiment analysis
 

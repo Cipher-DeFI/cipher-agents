@@ -1,5 +1,5 @@
 import { Action, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
-import { AvalancheTokenMappingService } from '../services/avalancheTokenMapping';
+import { SupportedTokenMappingService } from '../services/supportedTokenMapping';
 import { MarketDataService } from '../services/marketData';
 import { CommitmentAnalysis, FearGreedData, EnhancedCommitmentAnalysis, PriceBasedCommitmentAnalysis, PriceTargetAnalysis } from '../types';
 import { formatCommitmentResponse, formatGeneralAnalysis, calculateVolatility, calculateMaxDrawdown, formatPriceBasedCommitmentResponse, calculateAverageAnnualReturn, calculateExpectedReturn, calculatePricePredictions } from '../utils/commitmentUtils';
@@ -7,7 +7,7 @@ import { formatCommitmentResponse, formatGeneralAnalysis, calculateVolatility, c
 export const CommitmentAnalysisAction: Action = {
   name: 'FUM_ANALYZE_COMMITMENT',
   similes: ['CHECK_COMMITMENT', 'VALIDATE_LOCK', 'ANALYZE_VAULT', 'RATE_COMMITMENT', 'BEHAVIORAL_ANALYSIS', 'MARKET_INSIGHTS'],
-  description: 'Analyzes commitment vault parameters for Avalanche network tokens using real market data and Fear & Greed Index, or provides general behavioral insights and market analysis',
+  description: 'Analyzes commitment vault parameters for supported tokens (AVAX, ETH) using real market data and Fear & Greed Index, or provides general behavioral insights and market analysis',
   
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     return true
@@ -22,14 +22,14 @@ export const CommitmentAnalysisAction: Action = {
   ) => {
     try {
       const text = message.content?.text || '';
-      const amountMatch = text.match(/(\d+\.?\d*)\s*(AVAX|WAVAX|USDC\.E|USDT\.E|JOE|PNG)/i);
+      const amountMatch = text.match(/(\d+\.?\d*)\s*(AVAX|ETH|MONAD)/i);
       const timeMatch = text.match(/(\d+)\s*(days?|months?|weeks?|years?)/i);
       
-      const priceBasedPattern = text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|WAVAX|USDC\.E|USDT\.E|JOE|PNG)\s+until\s+(?:either\s+)?(?:the\s+)?price\s+(?:goes\s+)?(?:up\s+)?to\s+\$?(\d+\.?\d*)\s+(?:or|and)\s+(?:price\s+)?(?:goes\s+)?(?:down\s+)?to\s+\$?(\d+\.?\d*)/i) ||
-                               text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|WAVAX|USDC\.E|USDT\.E|JOE|PNG)\s+until\s+(?:the\s+)?price\s+(?:reaches|hits)?\s*\$?(\d+\.?\d*)\s+or\s+\$?(\d+\.?\d*)/i) ||
-                               text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|WAVAX|USDC\.E|USDT\.E|JOE|PNG)\s+(?:until|till)\s+\$?(\d+\.?\d*)\s+or\s+\$?(\d+\.?\d*)/i);
+      const priceBasedPattern = text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+until\s+(?:either\s+)?(?:the\s+)?price\s+(?:goes\s+)?(?:up\s+)?to\s+\$?(\d+\.?\d*)\s+(?:or|and)\s+(?:price\s+)?(?:goes\s+)?(?:down\s+)?to\s+\$?(\d+\.?\d*)/i) ||
+                               text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+until\s+(?:the\s+)?price\s+(?:reaches|hits)?\s*\$?(\d+\.?\d*)\s+or\s+\$?(\d+\.?\d*)/i) ||
+                               text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+(?:until|till)\s+\$?(\d+\.?\d*)\s+or\s+\$?(\d+\.?\d*)/i);
       
-      const avalancheTokenService = new AvalancheTokenMappingService(runtime);
+      const tokenService = new SupportedTokenMappingService(runtime);
       const marketDataService = new MarketDataService(runtime);
       
       const marketData = await marketDataService.getMarketData();
@@ -49,39 +49,38 @@ export const CommitmentAnalysisAction: Action = {
         const upTarget = parseFloat(priceBasedPattern[3]);
         const downTarget = parseFloat(priceBasedPattern[4]);
         
-        const validationResult = await avalancheTokenService.validateAvalancheToken(tokenSymbol);
+        const validationResult = await tokenService.validateToken(tokenSymbol);
         
         if (!validationResult.isValid) {
-          let errorMessage = `I couldn't validate "${tokenSymbol}" on Avalanche C-Chain. `;
+          let errorMessage = `I couldn't validate "${tokenSymbol}" as a supported token. `;
           
           if (validationResult.error) {
             errorMessage += validationResult.error + '\n\n';
           }
           
           if (validationResult.suggestions && validationResult.suggestions.length > 0) {
-            errorMessage += `Supported Avalanche tokens:\n`;
+            errorMessage += `Supported tokens:\n`;
             validationResult.suggestions.forEach(suggestion => {
               errorMessage += `• ${suggestion.toUpperCase()}\n`;
             });
           } else {
-            errorMessage += `Supported Avalanche tokens:\n`;
+            errorMessage += `Supported tokens:\n`;
             errorMessage += `• AVAX (Avalanche)\n`;
-            errorMessage += `• WAVAX (Wrapped AVAX)\n`;
-            errorMessage += `• USDC.E (Avalanche Bridged USDC)\n`;
-            errorMessage += `• USDT.E (Tether Avalanche Bridged)\n`;
+            errorMessage += `• ETH (Ethereum)\n`;
+            errorMessage += `• MONAD (Monad)\n`;
           }
           
-          errorMessage += `\nPlease try again with a supported Avalanche token.`;
+          errorMessage += `\nPlease try again with a supported token.`;
           
           await callback?.({
             text: errorMessage,
-            thought: `Avalanche token ${tokenSymbol} validation failed`,
+            thought: `Token ${tokenSymbol} validation failed`,
             actions: ['FUM_ANALYZE_COMMITMENT']
           });
           return false;
         }
 
-        const tokenData = await avalancheTokenService.getTokenData(tokenSymbol);
+        const tokenData = await tokenService.getTokenData(tokenSymbol);
         
         if (!tokenData) {
           await callback?.({
@@ -92,7 +91,7 @@ export const CommitmentAnalysisAction: Action = {
           return false;
         }
 
-        const historicalData = await avalancheTokenService.getHistoricalData(tokenSymbol, 365);
+        const historicalData = await tokenService.getHistoricalData(tokenSymbol, 365);
         
         const analysis = await analyzePriceBasedCommitment(
           tokenData,
@@ -107,7 +106,7 @@ export const CommitmentAnalysisAction: Action = {
         
         await callback?.({
           text: formatPriceBasedCommitmentResponse(analysis, fearGreedData, validationResult),
-          thought: `Analyzed Avalanche price-based commitment: ${amount} ${tokenSymbol} until price reaches $${upTarget} or $${downTarget} with real market data and Fear & Greed Index`,
+          thought: `Analyzed price-based commitment: ${amount} ${tokenSymbol} until price reaches $${upTarget} or $${downTarget} with real market data and Fear & Greed Index`,
           actions: ['FUM_ANALYZE_COMMITMENT'],
           metadata: {
             amount,
@@ -121,7 +120,7 @@ export const CommitmentAnalysisAction: Action = {
               timestamp: fearGreedData.timestamp
             } : null,
             marketData: marketData,
-            avalancheValidation: validationResult
+            validation: validationResult
           }
         });
         
@@ -139,39 +138,38 @@ export const CommitmentAnalysisAction: Action = {
         if (unit.includes('month')) durationInDays *= 30;
         if (unit.includes('year')) durationInDays *= 365;
         
-        const validationResult = await avalancheTokenService.validateAvalancheToken(tokenSymbol);
+        const validationResult = await tokenService.validateToken(tokenSymbol);
         
         if (!validationResult.isValid) {
-          let errorMessage = `I couldn't validate "${tokenSymbol}" on Avalanche C-Chain. `;
+          let errorMessage = `I couldn't validate "${tokenSymbol}" as a supported token. `;
           
           if (validationResult.error) {
             errorMessage += validationResult.error + '\n\n';
           }
           
           if (validationResult.suggestions && validationResult.suggestions.length > 0) {
-            errorMessage += `Supported Avalanche tokens:\n`;
+            errorMessage += `Supported tokens:\n`;
             validationResult.suggestions.forEach(suggestion => {
               errorMessage += `• ${suggestion.toUpperCase()}\n`;
             });
           } else {
-            errorMessage += `Supported Avalanche tokens:\n`;
+            errorMessage += `Supported tokens:\n`;
             errorMessage += `• AVAX (Avalanche)\n`;
-            errorMessage += `• WAVAX (Wrapped AVAX)\n`;
-            errorMessage += `• USDC.E (Avalanche Bridged USDC)\n`;
-            errorMessage += `• USDT.E (Tether Avalanche Bridged)\n`;
+            errorMessage += `• ETH (Ethereum)\n`;
+            errorMessage += `• MONAD (Monad)\n`;
           }
           
-          errorMessage += `\nPlease try again with a supported Avalanche token.`;
+          errorMessage += `\nPlease try again with a supported token.`;
           
           await callback?.({
             text: errorMessage,
-            thought: `Avalanche token ${tokenSymbol} validation failed`,
+            thought: `Token ${tokenSymbol} validation failed`,
             actions: ['FUM_ANALYZE_COMMITMENT']
           });
           return false;
         }
 
-        const tokenData = await avalancheTokenService.getTokenData(tokenSymbol);
+        const tokenData = await tokenService.getTokenData(tokenSymbol);
         
         if (!tokenData) {
           await callback?.({
@@ -182,7 +180,7 @@ export const CommitmentAnalysisAction: Action = {
           return false;
         }
 
-        const historicalData = await avalancheTokenService.getHistoricalData(tokenSymbol, Math.max(365, durationInDays));
+        const historicalData = await tokenService.getHistoricalData(tokenSymbol, Math.max(365, durationInDays));
         
         const analysis = await analyzeCommitmentWithRealData(
           tokenData, 
@@ -196,7 +194,7 @@ export const CommitmentAnalysisAction: Action = {
         
         await callback?.({
           text: formatCommitmentResponse(analysis, amount, tokenSymbol, duration, unit, tokenData, fearGreedData, validationResult),
-          thought: `Analyzed Avalanche commitment: ${amount} ${tokenSymbol} for ${duration} ${unit} with real market data, Fear & Greed Index, and price predictions`,
+          thought: `Analyzed commitment: ${amount} ${tokenSymbol} for ${duration} ${unit} with real market data, Fear & Greed Index, and price predictions`,
           actions: ['FUM_ANALYZE_COMMITMENT'],
           metadata: {
             amount,
@@ -220,7 +218,7 @@ export const CommitmentAnalysisAction: Action = {
               timestamp: fearGreedData.timestamp
             } : null,
             marketData: marketData,
-            avalancheValidation: validationResult
+            validation: validationResult
           }
         });
         
@@ -241,9 +239,9 @@ export const CommitmentAnalysisAction: Action = {
       }
       
     } catch (error) {
-      console.error('Error in Avalanche commitment analysis:', error);
+      console.error('Error in commitment analysis:', error);
       await callback?.({
-        text: 'I encountered an error while analyzing your Avalanche commitment request. Please try again.',
+        text: 'I encountered an error while analyzing your commitment request. Please try again.',
         thought: `Error: ${error.message}`,
         actions: ['FUM_ANALYZE_COMMITMENT']
       });
@@ -260,7 +258,20 @@ export const CommitmentAnalysisAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: 'Analyzing your Avalanche commitment proposal with real market data and Fear & Greed Index...',
+          text: 'Analyzing your commitment proposal with real market data and Fear & Greed Index...',
+          actions: ['FUM_ANALYZE_COMMITMENT']
+        }
+      }
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: { text: 'I want to lock 2 ETH for 6 months' }
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'Analyzing your Ethereum commitment proposal with real market data and Fear & Greed Index...',
           actions: ['FUM_ANALYZE_COMMITMENT']
         }
       }
@@ -299,7 +310,7 @@ export const CommitmentAnalysisAction: Action = {
       {
         name: '{{agent}}',
         content: {
-          text: 'Analyzing your Avalanche price-based commitment proposal...',
+          text: 'Analyzing your price-based commitment proposal...',
           actions: ['FUM_ANALYZE_COMMITMENT']
         }
       }
@@ -328,23 +339,13 @@ async function analyzeCommitmentWithRealData(
   const marketConditions: string[] = [];
   const suggestedOptimizations: string[] = [];
   const fearGreedInsights: string[] = [];
-  const avalancheInsights: string[] = [];
+  const tokenInsights: string[] = [];
 
   if (validationResult.tokenInfo) {
-    if (validationResult.tokenInfo.chainlinkPriceFeed) {
-      score += 5;
-      factors.push('Token has reliable Chainlink price feed on Avalanche');
-      avalancheInsights.push('Chainlink integration ensures accurate price data for commitment analysis');
-    } else {
-      score -= 5;
-      factors.push('Token lacks reliable price feed - higher risk for commitment analysis');
-      avalancheInsights.push('Consider using tokens with Chainlink price feeds for better accuracy');
-    }
-    
-    if (validationResult.contractExists) {
-      factors.push('Token contract verified on Avalanche C-Chain');
-      avalancheInsights.push('Contract verification ensures token legitimacy on Avalanche');
-    }
+    score += 5;
+    factors.push(`Token ${tokenSymbol} is supported by FUMVault`);
+    tokenInsights.push(`${validationResult.tokenInfo.name} is a verified supported token`);
+    tokenInsights.push(`Network: ${validationResult.tokenInfo.network}`);
   }
 
   if (durationInDays < 30) {
@@ -468,12 +469,18 @@ async function analyzeCommitmentWithRealData(
     behavioralInsights.push('Longer locks reduce FOMO and panic selling impulses');
   }
 
-  if (tokenSymbol === 'AVAX' || tokenSymbol === 'WAVAX') {
+  if (tokenSymbol === 'AVAX') {
     suggestedOptimizations.push('Consider staking AVAX for additional yield during lock period');
     suggestedOptimizations.push('Monitor Avalanche network activity for ecosystem growth signals');
-  } else if (tokenSymbol === 'USDC.E' || tokenSymbol === 'USDT.E') {
-    suggestedOptimizations.push('Stablecoin commitments provide stability during market volatility');
-    suggestedOptimizations.push('Consider yield farming opportunities on Avalanche DeFi protocols');
+    tokenInsights.push('AVAX is the native token of the Avalanche network');
+  } else if (tokenSymbol === 'ETH') {
+    suggestedOptimizations.push('Consider staking ETH for additional yield during lock period');
+    suggestedOptimizations.push('Monitor Ethereum network upgrades and DeFi ecosystem growth');
+    tokenInsights.push('ETH is the native token of the Ethereum network');
+  } else if (tokenSymbol === 'MONAD') {
+    suggestedOptimizations.push('Consider staking MONAD for additional yield during lock period');
+    suggestedOptimizations.push('Monitor Monad network activity for ecosystem growth signals');
+    tokenInsights.push('MONAD is the native token of the Monad network');
   }
 
   if (score < 70) {
@@ -598,9 +605,9 @@ async function analyzePriceBasedCommitment(
                         historicalData && calculateVolatility(historicalData) > 0.6 ? 1 : 0;
   const fearGreedRisk = fearGreedData && fearGreedData.value > 75 ? 2 : 
                        fearGreedData && fearGreedData.value > 60 ? 1 : 0;
-  const avalancheRisk = validationResult.tokenInfo && !validationResult.tokenInfo.chainlinkPriceFeed ? 1 : 0;
+  const tokenRisk = validationResult.tokenInfo ? 0 : 1;
   
-  const totalRisk = upRisk + downRisk + volatilityRisk + fearGreedRisk + avalancheRisk;
+  const totalRisk = upRisk + downRisk + volatilityRisk + fearGreedRisk + tokenRisk;
   if (totalRisk >= 6) overallRisk = 'EXTREME';
   else if (totalRisk >= 4) overallRisk = 'HIGH';
   else if (totalRisk <= 1) overallRisk = 'LOW';
@@ -608,14 +615,13 @@ async function analyzePriceBasedCommitment(
   const insights: string[] = [];
   const recommendations: string[] = [];
   
-  // Add Avalanche-specific insights
+  // Add token-specific insights
   if (validationResult.tokenInfo) {
-    if (validationResult.tokenInfo.chainlinkPriceFeed) {
-      insights.push('Token has reliable Chainlink price feed for accurate target monitoring');
-    } else {
-      insights.push('Token lacks Chainlink price feed - consider using supported tokens for better accuracy');
-      recommendations.push('Consider using AVAX, WAVAX, USDC.E, or USDT.E for more reliable price monitoring');
-    }
+    insights.push(`${validationResult.tokenInfo.name} is a supported token on ${validationResult.tokenInfo.network}`);
+    insights.push('Token has reliable price data for accurate target monitoring');
+  } else {
+    insights.push('Token validation failed - consider using supported tokens for better accuracy');
+    recommendations.push('Consider using AVAX or ETH for more reliable price monitoring');
   }
   
   if (upTargetAnalysis.probability > 0.7) {

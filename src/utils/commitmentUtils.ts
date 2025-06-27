@@ -45,7 +45,7 @@ export function formatCommitmentResponse(
   fearGreedData: FearGreedData | null,
   validationResult?: any
 ): string {
-  const { score, recommendation, factors, riskLevel, behavioralInsights, marketConditions, suggestedOptimizations, fearGreedInsights, expectedReturn, pricePredictions } = analysis;
+  const { score, recommendation, riskLevel, behavioralInsights, marketConditions, suggestedOptimizations, fearGreedInsights, expectedReturn, pricePredictions } = analysis;
 
   let emoji = '✅';
   let action = 'This is a solid commitment';
@@ -89,16 +89,12 @@ export function formatCommitmentResponse(
     fearGreedDisplay = `**Fear & Greed Index:** ${fearGreedData.value} (${fearGreedData.classification}) ${fearGreedEmoji}`;
   }
 
-  let avalancheInfo = '';
+  let tokenInfo = '';
   if (validationResult?.tokenInfo) {
-    const chainlinkStatus = validationResult.tokenInfo.chainlinkPriceFeed ? '✅ Chainlink Price Feed' : '❌ No Price Feed';
-    const contractStatus = validationResult.contractExists ? '✅ Contract Verified' : '⚠️ Contract Unverified';
-    
-    avalancheInfo = `**Avalanche Network Info:**
-  • ${chainlinkStatus}
-  • ${contractStatus}
-  • Contract: ${validationResult.tokenInfo.contractAddress}
-  • Token: ${validationResult.tokenInfo.name} (${validationResult.tokenInfo.symbol})`;
+    tokenInfo = `**Token Information:**
+  • Network: ${validationResult.tokenInfo.network}
+  • Token: ${validationResult.tokenInfo.name} (${validationResult.tokenInfo.symbol})
+  • Status: ✅ Supported by FUMVault`;
   }
 
   const formatPricePredictions = (predictions: PricePrediction[]): string => {
@@ -113,7 +109,7 @@ export function formatCommitmentResponse(
     }).join('\n');
   };
 
-  return `${emoji} **Avalanche Commitment Analysis**
+  return `${emoji} **Commitment Analysis**
   
   **Proposal:** Lock ${amount} ${tokenSymbol} for ${duration} ${unit}
   **Current Price:** $${formatCurrency(currentPrice)} (${priceChange24h > 0 ? '+' : ''}${formatPercentage(priceChange24h)}% 24h)
@@ -122,7 +118,7 @@ export function formatCommitmentResponse(
   
   ${fearGreedDisplay}
   
-  ${avalancheInfo}
+  ${tokenInfo}
   
   **Market Context:**
   • 7-day change: ${priceChange7d > 0 ? '+' : ''}${formatPercentage(priceChange7d)}%
@@ -142,7 +138,7 @@ export function formatCommitmentResponse(
   ${formatPricePredictions(pricePredictions)}
   
   **Analysis:**
-  ${factors.map(f => `• ${f}`).join('\n')}
+  
   
   **Risk Level:** ${riskLevel} ${riskLevel === 'EXTREME' ? '🔥' : riskLevel === 'HIGH' ? '⚠️' : riskLevel === 'LOW' ? '🟢' : '🟡'}
   
@@ -160,7 +156,7 @@ export function formatCommitmentResponse(
   **Suggested Optimizations:**
   ${suggestedOptimizations.map((opt, index) => `${index + 1}. ${opt}`).join('\n')}
   
-  Would you like me to help you optimize this Avalanche commitment or proceed with the vault creation?`;
+  Would you like me to help you optimize this commitment or proceed with the vault creation?`;
 }
 
 export function formatGeneralAnalysis(text: string, fearGreedData: FearGreedData | null, marketData: any): string {
@@ -174,30 +170,25 @@ export function formatGeneralAnalysis(text: string, fearGreedData: FearGreedData
     fearGreedDisplay = `**Current Fear & Greed Index:** ${fearGreedData.value} (${fearGreedData.classification}) ${fearGreedEmoji}`;
   }
 
-  return `🏔️ **Avalanche Commitment Analysis**
+  return `🏔️ **Commitment Analysis**
 
   ${fearGreedDisplay}
 
-  **Supported Avalanche Tokens:**
-  • **AVAX** - Native Avalanche token (Chainlink price feed available)
-  • **WAVAX** - Wrapped AVAX for DeFi (Chainlink price feed available)
-  • **USDC.E** - Avalanche Bridged USDC (Chainlink price feed available)
-  • **USDT.E** - Tether Avalanche Bridged (Chainlink price feed available)
-  • **JOE** - JoeToken (limited price feed support)
-  • **PNG** - Pangolin (limited price feed support)
+  **Supported Tokens:**
+  • **AVAX** - Native Avalanche token
+  • **ETH** - Native Ethereum token
 
   **Example Commitments:**
   • "I want to lock 10 AVAX for 3 months"
-  • "Lock 5 WAVAX until price reaches $50 or $30"
-  • "Commit 1000 USDC.E for 6 months"
+  • "Lock 2 ETH until price reaches $5000 or $3000"
+  • "Commit 5 ETH for 6 months"
 
-  **Avalanche Network Benefits:**
-  • Fast finality and low transaction costs
-  • Chainlink price feeds for reliable price monitoring
-  • Verified smart contracts for security
-  • Active DeFi ecosystem for yield opportunities
+  **Network Benefits:**
+  • **Avalanche:** Fast finality and low transaction costs
+  • **Ethereum:** Largest DeFi ecosystem and network effects
+  • Both networks offer reliable price data and security
 
-  Please provide a specific Avalanche commitment proposal for detailed analysis.`;
+  Please provide a specific commitment proposal for detailed analysis.`;
 }
 
 export function calculateAverageAnnualReturn(historicalData: number[][]): number {
@@ -255,21 +246,17 @@ export function formatPriceBasedCommitmentResponse(
     fearGreedDisplay = `**Fear & Greed Index:** ${fearGreedData.value} (${fearGreedData.classification}) ${fearGreedEmoji}`;
   }
 
-  let avalancheInfo = '';
+  let tokenInfo = '';
   if (validationResult?.tokenInfo) {
-    const chainlinkStatus = validationResult.tokenInfo.chainlinkPriceFeed ? '✅ Chainlink Price Feed' : '❌ No Price Feed';
-    const contractStatus = validationResult.contractExists ? '✅ Contract Verified' : '⚠️ Contract Unverified';
-    
-    avalancheInfo = `**Avalanche Network Info:**
-  • ${chainlinkStatus}
-  • ${contractStatus}
-  • Contract: ${validationResult.tokenInfo.contractAddress}
-  • Token: ${validationResult.tokenInfo.name} (${validationResult.tokenInfo.symbol})`;
+    tokenInfo = `**Token Information:**
+  • Network: ${validationResult.tokenInfo.network}
+  • Token: ${validationResult.tokenInfo.name} (${validationResult.tokenInfo.symbol})
+  • Status: ✅ Supported by FUMVault`;
   }
 
   const riskEmoji = overallRisk === 'EXTREME' ? '🔥' : overallRisk === 'HIGH' ? '⚠️' : overallRisk === 'LOW' ? '🟢' : '🟡';
 
-  return `🎯 **Avalanche Price-Based Commitment Analysis**
+  return `🎯 **Price-Based Commitment Analysis**
 
   **Proposal:** Lock ${amount} ${tokenSymbol} until price reaches $${formatCurrency(upTarget)} or $${formatCurrency(downTarget)}
   **Current Price:** $${formatCurrency(currentPrice)}
@@ -278,7 +265,7 @@ export function formatPriceBasedCommitmentResponse(
 
   ${fearGreedDisplay}
 
-  ${avalancheInfo}
+  ${tokenInfo}
 
   **📈 Up Target Analysis ($${formatCurrency(upTarget)}):**
   • Probability: ${formatPercentage(upTargetAnalysis.probability * 100)}%
@@ -312,7 +299,7 @@ export function formatPriceBasedCommitmentResponse(
   **🎯 Recommendations:**
   ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
 
-  Would you like me to help you optimize this Avalanche price-based commitment or proceed with the vault creation?`;
+  Would you like me to help you optimize this price-based commitment or proceed with the vault creation?`;
 }
 
 export async function calculatePricePredictions(
