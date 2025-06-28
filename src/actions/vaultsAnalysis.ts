@@ -85,11 +85,24 @@ async function analyzeVaultsData(vaults: VaultData[], marketData: MarketData | n
   const lockDurations = vaults.map(vault => {
     const createdAt = parseInt(vault.createdAt);
     const unlockTime = parseInt(vault.unlockTime);
-    return (unlockTime - createdAt) / (24 * 60 * 60);
+    
+    if (isNaN(createdAt) || isNaN(unlockTime)) {
+      return 30;
+    }
+    
+    const durationMs = unlockTime - createdAt;
+    const durationDays = durationMs / (1000 * 60 * 60 * 24);
+    
+    if (durationDays >= 0.042 && durationDays <= 3650) {
+      return durationDays;
+    }
+    
+    return 30;
   });
+  
   const averageLockDuration = lockDurations.length > 0 
     ? lockDurations.reduce((a, b) => a + b, 0) / lockDurations.length 
-    : 0;
+    : 30;
   
   const amounts = vaults.map(vault => parseFloat(vault.amount) / 1e18);
   const averageAmount = amounts.length > 0 
@@ -306,6 +319,13 @@ function formatVaultsAnalysisResponse(analysis: VaultsAnalysisResult, marketData
   const sentimentEmoji = marketData?.fearGreedIndex ? 
     (marketData.fearGreedIndex > 60 ? '🐂' : marketData.fearGreedIndex < 40 ? '🐻' : '➡️') : '➡️';
   
+  // Determine the primary token for display
+  const primaryToken = analysis.topTokens.length > 0 ? analysis.topTokens[0].token : 'AVAX';
+  
+  // Check if we have mixed tokens
+  const hasMultipleTokens = analysis.topTokens.length > 1;
+  const tokenDisplay = hasMultipleTokens ? 'tokens' : primaryToken;
+  
   let response = `# 🏦 **Community Vaults Analysis Report**
   
 ## 📊 **Overview Statistics**
@@ -316,19 +336,14 @@ function formatVaultsAnalysisResponse(analysis: VaultsAnalysisResult, marketData
 **Success Rate:** ${successRateEmoji} ${analysis.successRate.toFixed(1)}%
 
 ## 💰 **Value Metrics**
-**Total Value Locked:** ${analysis.totalValueLocked.toFixed(4)} ETH
-**Average Vault Amount:** ${analysis.averageAmount.toFixed(4)} ETH
+**Total Value Locked:** ${analysis.totalValueLocked.toFixed(4)} ${tokenDisplay}
+**Average Vault Amount:** ${analysis.averageAmount.toFixed(4)} ${hasMultipleTokens ? 'tokens' : primaryToken}
 **Average Lock Duration:** ${analysis.averageLockDuration.toFixed(1)} days
 
 ## ⏰ **Time Distribution**
 • **Short-term (< 30 days):** ${analysis.timeDistribution.shortTerm} vaults
 • **Medium-term (30-90 days):** ${analysis.timeDistribution.mediumTerm} vaults
 • **Long-term (> 90 days):** ${analysis.timeDistribution.longTerm} vaults
-
-## 🪙 **Top Locked Assets**
-${analysis.topTokens.map((token, index) => 
-  `${index + 1}. ${token.token === '0x0000000000000000000000000000000000000000' ? 'ETH' : 'Token'}: ${token.count} vaults (${token.totalValue.toFixed(4)} total)`
-).join('\n')}
 
 ## 🔍 **Common Patterns**
 ${analysis.commonPatterns.map(pattern => `• ${pattern}`).join('\n')}
@@ -361,11 +376,15 @@ function getTokenSymbolFromVault(vault: VaultData): string {
   try {
     if (vault.insight && vault.insight.insight) {
       const insightData: VaultInsight = JSON.parse(vault.insight.insight);
-      return insightData.tokenSymbol || 'UNKNOWN';
+      return insightData.tokenSymbol || 'AVAX';
     }
   } catch (error) {
     console.warn('Failed to parse vault insight:', error);
   }
-
-  return 'UNKNOWN';
+  
+  if (vault.token.toLowerCase() === '0x0000000000000000000000000000000000000000') {
+    return 'AVAX';
+  }
+  
+  return 'AVAX';
 }
