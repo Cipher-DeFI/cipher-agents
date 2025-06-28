@@ -224,36 +224,36 @@ function generatePersonalizedRecommendations(
   const recommendations: string[] = [];
   
   if (riskScore > 70) {
-    recommendations.push('🔴 **Immediate Risk Management Needed**: Your trading patterns indicate high risk. Consider implementing strict stop-losses and reducing position sizes.');
+    recommendations.push('Your trading patterns indicate high risk. Consider implementing strict stop-losses and reducing position sizes.');
   } else if (riskScore > 50) {
-    recommendations.push('🟡 **Moderate Risk Alert**: Consider diversifying your portfolio and implementing basic risk management strategies.');
+    recommendations.push('Consider diversifying your portfolio and implementing basic risk management strategies.');
   } else {
-    recommendations.push('🟢 **Good Risk Management**: Your current risk profile is well-managed. Continue with your current strategies.');
+    recommendations.push('Your current risk profile is well-managed. Continue with your current strategies.');
   }
   
   if (data.tradeFrequency > 5) {
-    recommendations.push('📊 **Reduce Trading Frequency**: High-frequency trading may lead to increased transaction costs and emotional decisions. Consider longer holding periods.');
+    recommendations.push('High-frequency trading may lead to increased transaction costs and emotional decisions. Consider longer holding periods.');
   }
   
   if (data.averageHoldTime < 14) {
-    recommendations.push('⏰ **Extend Holding Periods**: Short holding periods often indicate emotional trading. Consider implementing a minimum 30-day holding rule.');
+    recommendations.push('Short holding periods often indicate emotional trading. Consider implementing a minimum 30-day holding rule.');
   }
   
   if (data.diversificationScore < 50) {
-    recommendations.push('🌐 **Improve Diversification**: Your portfolio appears concentrated. Consider spreading investments across different assets and sectors.');
+    recommendations.push('Your portfolio appears concentrated. Consider spreading investments across different assets and sectors.');
   }
   
   if (marketAnalysis.sentiment === 'BEARISH') {
-    recommendations.push('🐻 **Bear Market Strategy**: Consider defensive positions, dollar-cost averaging, and focus on capital preservation.');
+    recommendations.push('Consider defensive positions, dollar-cost averaging, and focus on capital preservation.');
   } else if (marketAnalysis.sentiment === 'BULLISH') {
-    recommendations.push('🐂 **Bull Market Opportunity**: While markets are bullish, maintain discipline and avoid FOMO-driven decisions.');
+    recommendations.push('While markets are bullish, maintain discipline and avoid FOMO-driven decisions.');
   }
   
   if (data.emotionalTradingIndicators.length > 0) {
-    recommendations.push('🧠 **Emotional Trading Alert**: Consider using commitment vaults to lock positions and prevent emotional decisions during market volatility.');
+    recommendations.push('Consider using commitment vaults to lock positions and prevent emotional decisions during market volatility.');
   }
   
-  recommendations.push('📈 **Long-term Focus**: Consider implementing a systematic investment plan with regular rebalancing to reduce emotional decision-making.');
+  recommendations.push('Consider implementing a systematic investment plan with regular rebalancing to reduce emotional decision-making.');
   
   return recommendations;
 }
@@ -299,8 +299,8 @@ function formatWalletAnalysisResponse(analysis: WalletAnalysisResult, marketData
 **AI Recommendation:** ${analysis.marketAnalysis.aiRecommendation}
 
 ## 🔍 **Your Trading Factors**
-• **Average Hold Time:** ${analysis.userTradingFactors.averageHoldTime} days
-• **Trade Frequency:** ${analysis.userTradingFactors.tradeFrequency} trades/week
+• **Average Hold Time:** ${analysis.userTradingFactors.averageHoldTime.toFixed(1)} days${analysis.userTradingFactors.averageHoldTime < 1 ? ' (Very short-term trading)' : analysis.userTradingFactors.averageHoldTime < 7 ? ' (Short-term trading)' : analysis.userTradingFactors.averageHoldTime < 30 ? ' (Medium-term trading)' : ' (Long-term trading)'}
+• **Trade Frequency:** ${analysis.userTradingFactors.tradeFrequency.toFixed(1)} trades/week${analysis.userTradingFactors.tradeFrequency > 50 ? ' (Very high frequency)' : analysis.userTradingFactors.tradeFrequency > 20 ? ' (High frequency)' : analysis.userTradingFactors.tradeFrequency > 5 ? ' (Moderate frequency)' : ' (Low frequency)'}
 • **Volatility Tolerance:** ${analysis.userTradingFactors.volatilityTolerance.toFixed(1)}/100
 • **Diversification Score:** ${analysis.userTradingFactors.diversificationScore.toFixed(1)}/100`;
 

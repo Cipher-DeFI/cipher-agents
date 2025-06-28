@@ -111,14 +111,20 @@ export class TradingAnalyzer {
             
             if (sellTime) {
               const holdDays = (sellTime - buyTime) / (1000 * 60 * 60 * 24);
-              holdTimes.push(holdDays);
+              if (holdDays >= 0.042 && holdDays <= 3650) {
+                holdTimes.push(holdDays);
+              }
             }
           }
         });
         
-        return holdTimes.length > 0
-          ? holdTimes.reduce((a, b) => a + b, 0) / holdTimes.length
-          : 30;
+        if (holdTimes.length === 0) {
+          return 30;
+        }
+        
+        const average = holdTimes.reduce((a, b) => a + b, 0) / holdTimes.length;
+        
+        return Math.max(1, Math.min(730, average));
       }
     
       private calculateTradeFrequency(transactions: WalletTransaction[]): number {
@@ -128,9 +134,18 @@ export class TradingAnalyzer {
         const firstTx = sortedTx[0];
         const lastTx = sortedTx[sortedTx.length - 1];
         
-        const weeksDiff = (lastTx.timestamp - firstTx.timestamp) / (1000 * 60 * 60 * 24 * 7);
+        const timeDiffMs = lastTx.timestamp - firstTx.timestamp;
+        const weeksDiff = timeDiffMs / (1000 * 60 * 60 * 24 * 7);
         
-        return weeksDiff > 0 ? transactions.length / weeksDiff : 0;
+        if (weeksDiff < 0.142857) {
+          const daysDiff = timeDiffMs / (1000 * 60 * 60 * 24);
+          const tradesPerDay = daysDiff > 0 ? transactions.length / daysDiff : 0;
+          return Math.min(tradesPerDay * 7, 100);
+        }
+        
+        const tradesPerWeek = weeksDiff > 0 ? transactions.length / weeksDiff : 0;
+        
+        return Math.min(tradesPerWeek, 100);
       }
     
       private calculateDiversificationScore(
