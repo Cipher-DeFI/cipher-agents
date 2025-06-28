@@ -124,3 +124,70 @@ export interface PriceBasedCommitmentAnalysis {
     averageTime: number;
   };
 }
+
+export interface WalletAnalysisResult {
+  riskScore: number;
+  confidencePercentage: number;
+  riskProfile: 'LOW_RISK' | 'MODERATE_RISK' | 'HIGH_RISK' | 'EXTREME_RISK';
+  marketAnalysis: {
+    sentiment: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
+    trendDirection: 'UPWARD' | 'DOWNWARD' | 'SIDEWAYS';
+    aiRecommendation: string;
+  };
+  userTradingFactors: {
+    averageHoldTime: number;
+    tradeFrequency: number;
+    volatilityTolerance: number;
+    diversificationScore: number;
+    emotionalTradingIndicators: string[];
+    ethActivity?: number;
+    avaxActivity?: number;
+  };
+  riskTolerance: 'CONSERVATIVE' | 'MODERATE' | 'AGGRESSIVE' | 'EXTREME';
+  personalizedRecommendations: string[];
+}
+
+export interface WalletTransaction {
+  hash: string;
+  timestamp: number;
+  from: string;
+  to: string;
+  value: string;
+  tokenAddress?: string;
+  tokenSymbol?: string;
+  tokenDecimals?: number;
+  gasPrice: string;
+  gasUsed: string;
+  isError: boolean;
+  methodId?: string;
+  functionName?: string;
+  chain: 'ETH' | 'AVAX';
+}
+
+export interface TokenBalance {
+  tokenAddress: string;
+  tokenSymbol: string;
+  tokenName: string;
+  tokenDecimals: number;
+  balance: string;
+  value?: number;
+  chain: 'ETH' | 'AVAX';
+}
+
+export interface TradingMetrics {
+  totalTrades: number;
+  averageHoldTime: number;
+  tradeFrequency: number;
+  volatilityTolerance: number;
+  diversificationScore: number;
+  emotionalTradingIndicators: string[];
+  profitLossRatio: number;
+  maxDrawdown: number;
+  sharpeRatio: number;
+  winRate: number;
+  averageTradeSize: number;
+  largestTrade: number;
+  smallestTrade: number;
+  ethActivity: number;
+  avaxActivity: number;
+}

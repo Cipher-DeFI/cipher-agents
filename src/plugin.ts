@@ -1,7 +1,9 @@
 import type { Plugin, IAgentRuntime } from '@elizaos/core';
 import { CommitmentAnalysisAction } from './actions/commitmentAnalysis';
+import { WalletAnalysisAction } from './actions/walletAnalysis';
 import { MarketDataProvider } from './providers/marketData';
-import { apiMessageRoute } from './api-routes';
+import { apiMessageRoute } from './direct-api/commitment-route';
+import { walletAnalysisRoute } from './direct-api/wallet-route';
 
 export const fumPlugin: Plugin = {
   name: 'fum',
@@ -9,6 +11,7 @@ export const fumPlugin: Plugin = {
   
   actions: [
     CommitmentAnalysisAction,
+    WalletAnalysisAction,
   ],
   
   providers: [
@@ -17,6 +20,7 @@ export const fumPlugin: Plugin = {
 
   routes: [
     apiMessageRoute,
+    walletAnalysisRoute,
   ],
 
     

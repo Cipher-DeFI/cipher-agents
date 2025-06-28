@@ -14,6 +14,15 @@ FUM AI Agents is an intelligent system that analyzes crypto vault locking commit
 - **Real-time market data**: Uses live price feeds and historical data for accurate analysis
 - **Multi-network support**: Native support for multiple blockchain networks
 
+### 📊 Wallet Analysis
+- **Risk assessment**: Comprehensive risk scoring (0-100) based on trading patterns
+- **Confidence analysis**: Percentage-based confidence in the analysis results
+- **Risk profiling**: LOW_RISK, MODERATE_RISK, HIGH_RISK, EXTREME_RISK categorization
+- **Market sentiment**: Real-time bullish/bearish analysis with trend direction
+- **Trading factors**: Analysis of hold times, trade frequency, volatility tolerance, and diversification
+- **Risk tolerance**: CONSERVATIVE, MODERATE, AGGRESSIVE, EXTREME classification
+- **Personalized recommendations**: AI-generated suggestions for improving trading behavior
+
 ### 📊 Advanced Analytics
 - **Commitment scoring**: 0-100 score based on multiple factors
 - **Risk assessment**: LOW, MODERATE, HIGH, EXTREME risk levels
@@ -67,8 +76,19 @@ curl -X POST http://localhost:3000/api/message \
   }'
 ```
 
+#### Wallet Analysis
+```bash
+curl -X POST http://localhost:3000/api/wallet-analysis \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Analyze my wallet trading history and provide risk assessment",
+    "walletAddress": "0x1234567890123456789012345678901234567890"
+  }'
+```
+
 ## 📡 API Response Format
 
+### Commitment Analysis Response
 The API returns structured data with AI analysis:
 
 ```json
@@ -108,6 +128,73 @@ The API returns structured data with AI analysis:
       "value": 65,
       "classification": "greed",
       "timestamp": 1751028483696
+    }
+  }
+}
+```
+
+### Wallet Analysis Response
+The wallet analysis endpoint returns comprehensive trading behavior insights:
+
+```json
+{
+  "success": true,
+  "data": {
+    "response": "AI formatted wallet analysis text",
+    "action": "FUM_ANALYZE_WALLET",
+    "character": "FUM Advisor",
+    
+    // 1. Risk Score (0-100)
+    "riskScore": 65.5,
+    
+    // 2. Confidence Percentage (50-95)
+    "confidencePercentage": 78.2,
+    
+    // 3. Risk Profile
+    "riskProfile": "HIGH_RISK",
+    
+    // 4. Current Market Analysis
+    "marketAnalysis": {
+      "sentiment": "BULLISH",
+      "trendDirection": "UPWARD",
+      "aiRecommendation": "Market sentiment is bullish with positive momentum. Consider gradual position building while maintaining risk management protocols."
+    },
+    
+    // 5. User Trading Factors
+    "userTradingFactors": {
+      "averageHoldTime": 12.5,
+      "tradeFrequency": 8.2,
+      "volatilityTolerance": 75.3,
+      "diversificationScore": 45.8,
+      "emotionalTradingIndicators": [
+        "Frequent trading during market volatility",
+        "Selling during price dips",
+        "Buying during FOMO periods"
+      ],
+      "ethActivity": 65.2,
+      "avaxActivity": 34.8
+    },
+    
+    // 6. Risk Tolerance
+    "riskTolerance": "AGGRESSIVE",
+    
+    // 7. Personalized Recommendations
+    "personalizedRecommendations": [
+      "🔴 **Immediate Risk Management Needed**: Your trading patterns indicate high risk. Consider implementing strict stop-losses and reducing position sizes.",
+      "📊 **Reduce Trading Frequency**: High-frequency trading may lead to increased transaction costs and emotional decisions. Consider longer holding periods.",
+      "⏰ **Extend Holding Periods**: Short holding periods often indicate emotional trading. Consider implementing a minimum 30-day holding rule.",
+      "🌐 **Improve Diversification**: Your portfolio appears concentrated. Consider spreading investments across different assets and sectors.",
+      "🧠 **Emotional Trading Alert**: Consider using commitment vaults to lock positions and prevent emotional decisions during market volatility."
+    ],
+    
+    // Additional metadata
+    "walletAddress": "0x1234567890123456789012345678901234567890",
+    "marketData": {
+      "fearGreedIndex": 65,
+      "marketCapChange24h": 2.5,
+      "btcChange24h": 1.8,
+      "ethChange24h": 2.1,
+      "solChange24h": 3.2
     }
   }
 }
