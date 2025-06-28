@@ -191,3 +191,60 @@ export interface TradingMetrics {
   ethActivity: number;
   avaxActivity: number;
 }
+
+export interface VaultInsight {
+  tokenSymbol: 'ETH' | 'AVAX';
+  [key: string]: any;
+}
+
+export interface VaultData {
+  id: string;
+  owner: string;
+  token: string;
+  amount: string;
+  unlockTime: string;
+  targetPrice: string;
+  priceUp: string;
+  priceDown: string;
+  conditionType: number;
+  status: number;
+  createdAt: string;
+  updatedAt: string;
+  title: string;
+  message: string;
+  autoWithdraw: boolean;
+  creationTxHash: string;
+  creationBlockNumber: string;
+  unlockedAt: string | null;
+  unlockedTxHash: string | null;
+  withdrawnAt: string | null;
+  withdrawnTxHash: string | null;
+  emergencyWithdrawnAt: string | null;
+  emergencyPenalty: string | null;
+  emergencyTxHash: string | null;
+  insight: {
+    insight: string;
+  } | null;
+}
+
+export interface VaultsAnalysisResult {
+  totalVaults: number;
+  activeVaults: number;
+  completedVaults: number;
+  emergencyWithdrawnVaults: number;
+  averageLockDuration: number;
+  averageAmount: number;
+  totalValueLocked: number;
+  successRate: number;
+  commonPatterns: string[];
+  riskInsights: string[];
+  behavioralInsights: string[];
+  marketInsights: string[];
+  recommendations: string[];
+  topTokens: Array<{ token: string; count: number; totalValue: number }>;
+  timeDistribution: {
+    shortTerm: number;
+    mediumTerm: number;
+    longTerm: number;
+  };
+}

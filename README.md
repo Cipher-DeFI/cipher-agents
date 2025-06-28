@@ -23,6 +23,15 @@ FUM AI Agents is an intelligent system that analyzes crypto vault locking commit
 - **Risk tolerance**: CONSERVATIVE, MODERATE, AGGRESSIVE, EXTREME classification
 - **Personalized recommendations**: AI-generated suggestions for improving trading behavior
 
+### 🏦 Community Vaults Analysis
+- **Community insights**: Analysis of the last 10 vault lock data from all users
+- **Success rate tracking**: Monitor commitment completion rates and emergency withdrawals
+- **Behavioral patterns**: Identify common commitment durations and amounts
+- **Token preferences**: Track which assets users prefer to lock (ETH/AVAX)
+- **Cross-chain analysis**: Compare vault patterns across Ethereum and Avalanche networks
+- **Market correlation**: Analyze vault creation patterns vs market conditions
+- **Community recommendations**: AI-generated suggestions for improving community engagement
+
 ### 📊 Advanced Analytics
 - **Commitment scoring**: 0-100 score based on multiple factors
 - **Risk assessment**: LOW, MODERATE, HIGH, EXTREME risk levels
@@ -83,6 +92,15 @@ curl -X POST http://localhost:3000/api/wallet-analysis \
   -d '{
     "text": "Analyze my wallet trading history and provide risk assessment",
     "walletAddress": "0x1234567890123456789012345678901234567890"
+  }'
+```
+
+#### Community Vaults Analysis
+```bash
+curl -X POST http://localhost:3000/api/vaults-analysis \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Analyze community vault patterns and provide insights"
   }'
 ```
 
@@ -195,6 +213,86 @@ The wallet analysis endpoint returns comprehensive trading behavior insights:
       "btcChange24h": 1.8,
       "ethChange24h": 2.1,
       "solChange24h": 3.2
+    }
+  }
+}
+```
+
+### Vaults Analysis Response
+The vaults analysis endpoint returns comprehensive community insights:
+
+```json
+{
+  "success": true,
+  "data": {
+    "response": "AI formatted vaults analysis text",
+    "action": "FUM_ANALYZE_VAULTS",
+    "character": "FUM Advisor",
+    
+    // Overview Statistics
+    "totalVaults": 10,
+    "activeVaults": 3,
+    "completedVaults": 6,
+    "emergencyWithdrawnVaults": 1,
+    "successRate": 90.0,
+    
+    // Value Metrics
+    "totalValueLocked": 15.5,
+    "averageAmount": 1.55,
+    "averageLockDuration": 45.2,
+    
+    // Time Distribution
+    "timeDistribution": {
+      "shortTerm": 2,
+      "mediumTerm": 5,
+      "longTerm": 3
+    },
+    
+    // Top Tokens
+    "topTokens": [
+      {
+        "token": "ETH",
+        "count": 6,
+        "totalValue": 8.2
+      },
+      {
+        "token": "AVAX",
+        "count": 4,
+        "totalValue": 7.3
+      }
+    ],
+    
+    // Insights
+    "commonPatterns": [
+      "Medium-term commitments (30-90 days) are the preferred choice",
+      "ETH is the most locked asset with 6 vaults",
+      "Cross-chain distribution: 60% ETH, 40% AVAX",
+      "Users prefer small amounts for testing commitment mechanisms"
+    ],
+    "riskInsights": [
+      "High success rate indicates strong community commitment to behavioral improvement",
+      "1 emergency withdrawals detected - users value capital preservation over penalties",
+      "3 active vaults show ongoing commitment to behavioral improvement"
+    ],
+    "behavioralInsights": [
+      "Medium average lock duration suggests balanced approach to commitment",
+      "Short-term vaults suggest users are testing the commitment mechanism",
+      "Long-term vaults indicate serious behavioral improvement intentions"
+    ],
+    "marketInsights": [
+      "Recent vaults created during fear periods - users seeking behavioral control in volatile markets"
+    ],
+    "recommendations": [
+      "📈 **Encourage Long-term Commitments**: Provide incentives for longer lock periods",
+      "💰 **Increase Commitment Amounts**: Users may benefit from larger commitments for better behavioral impact",
+      "📊 **Community Education**: Share success stories and behavioral improvement metrics"
+    ],
+    
+    // Additional metadata
+    "vaultsData": [...],
+    "marketData": {
+      "fearGreedIndex": 35,
+      "marketCapChange24h": -1.2
     }
   }
 }
