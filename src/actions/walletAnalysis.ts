@@ -5,7 +5,7 @@ import { BlockchainDataService } from '../services/blockchainData';
 import { TradingAnalyzer } from '../services/tradingAnalyzer';
 
 export const WalletAnalysisAction: Action = {
-  name: 'FUM_ANALYZE_WALLET',
+  name: 'CIPHER_ANALYZE_WALLET',
   similes: ['ANALYZE_TRADING_HISTORY', 'WALLET_RISK_ASSESSMENT', 'TRADING_PATTERN_ANALYSIS', 'PORTFOLIO_RISK_SCORE', 'BEHAVIORAL_TRADING_ANALYSIS'],
   description: 'Analyzes user wallet trading history to provide comprehensive risk assessment, market analysis, and personalized recommendations',
   

@@ -3,7 +3,7 @@ import { MarketDataService } from '../services/marketData';
 import { MarketData, VaultData, VaultsAnalysisResult, VaultInsight } from '../types';
 
 export const VaultsAnalysisAction: Action = {
-  name: 'FUM_ANALYZE_VAULTS',
+  name: 'CIPHER_ANALYZE_VAULTS',
   similes: ['VAULT_PATTERN_ANALYSIS', 'COMMITMENT_BEHAVIOR_ANALYSIS', 'LOCKING_TREND_ANALYSIS', 'VAULT_SUCCESS_RATE', 'COMMUNITY_BEHAVIOR_INSIGHTS'],
   description: 'Analyzes the last 10 vault lock data to provide insights into community commitment patterns, success rates, and behavioral trends',
   

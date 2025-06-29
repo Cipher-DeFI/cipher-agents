@@ -7,9 +7,9 @@ import { apiMessageRoute } from './direct-api/commitment-route';
 import { walletAnalysisRoute } from './direct-api/wallet-route';
 import { vaultsAnalysisRoute } from './direct-api/vaults-route';
 
-export const fumPlugin: Plugin = {
-  name: 'fum',
-  description: 'F.U.M - Fund Ur Memory Plugin for DeFi behavioral analysis with real market data',
+export const cipherPlugin: Plugin = {
+  name: 'cipher',
+  description: 'Cipher Protocol Plugin for DeFi behavioral analysis with real market data',
   
   actions: [
     CommitmentAnalysisAction,

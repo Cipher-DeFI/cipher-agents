@@ -36,12 +36,12 @@ export const vaultsAnalysisRoute: Route = {
       ]);
 
       const actions = runtime.actions || [];
-      const fumAction = actions.find(a => a.name === 'FUM_ANALYZE_VAULTS');
+      const cipherAction = actions.find(a => a.name === 'CIPHER_ANALYZE_VAULTS');
       
-      if (!fumAction) {
+      if (!cipherAction) {
         return res.status(500).json({
           success: false,
-          error: 'FUM_ANALYZE_VAULTS action not found'
+          error: 'CIPHER_ANALYZE_VAULTS action not found'
         });
       }
 
@@ -49,14 +49,14 @@ export const vaultsAnalysisRoute: Route = {
       let responseText = '';
       let actionName = '';
       
-      await fumAction.handler(
+      await cipherAction.handler(
         runtime,
         tempMessage,
         state,
         {},
         async (content: Content) => {
           responseText = content.text || '';
-          actionName = (content as any).action || (content as any).actions?.[0] || 'FUM_ANALYZE_VAULTS';
+          actionName = (content as any).action || (content as any).actions?.[0] || 'CIPHER_ANALYZE_VAULTS';
           
           if (content.metadata) {
             responseData = content.metadata;

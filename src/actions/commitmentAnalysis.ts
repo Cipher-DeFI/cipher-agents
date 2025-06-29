@@ -5,7 +5,7 @@ import { CommitmentAnalysis, FearGreedData, EnhancedCommitmentAnalysis, PriceBas
 import { formatCommitmentResponse, formatGeneralAnalysis, calculateVolatility, calculateMaxDrawdown, formatPriceBasedCommitmentResponse, calculateAverageAnnualReturn, calculateExpectedReturn, calculatePricePredictions } from '../utils/commitmentUtils';
 
 export const CommitmentAnalysisAction: Action = {
-  name: 'FUM_ANALYZE_COMMITMENT',
+  name: 'CIPHER_ANALYZE_COMMITMENT',
   similes: ['CHECK_COMMITMENT', 'VALIDATE_LOCK', 'ANALYZE_VAULT', 'RATE_COMMITMENT', 'BEHAVIORAL_ANALYSIS', 'MARKET_INSIGHTS'],
   description: 'Analyzes commitment vault parameters for supported tokens (AVAX, ETH) using real market data and Fear & Greed Index, or provides general behavioral insights and market analysis',
   

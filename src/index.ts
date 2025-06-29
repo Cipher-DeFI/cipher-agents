@@ -4,18 +4,18 @@ import {
   type Project,
   type ProjectAgent,
 } from '@elizaos/core';
-import { fumPlugin } from './plugin';
-import { fumAdvisor } from './characters/fum_advisor';
+import { cipherPlugin } from './plugin';
+import { cipherAdvisor } from './characters/cipher_advisor_legacy';
 
 const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
   logger.info('Initializing character');
-  logger.info('Name: ', fumAdvisor.name);
+  logger.info('Name: ', cipherAdvisor.name);
 };
 
 export const projectAgent: ProjectAgent = {
-  character: fumAdvisor,
+  character: cipherAdvisor,
   init: async (runtime: IAgentRuntime) => await initCharacter({ runtime }),
-  plugins: [fumPlugin],
+  plugins: [cipherPlugin],
 };
 const project: Project = {
   agents: [projectAgent],
