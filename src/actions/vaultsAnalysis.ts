@@ -62,7 +62,7 @@ export const VaultsAnalysisAction: Action = {
 
 async function fetchVaultsData(): Promise<VaultData[]> {
   try {
-    const response = await fetch('https://fund-ur-memory-indexer-production.up.railway.app/vaults?limit=10');
+    const response = await fetch('https://cipher-indexer.up.railway.app/vaults?limit=10');
     
     if (!response.ok) {
       throw new Error(`Failed to fetch vaults data: ${response.status}`);
