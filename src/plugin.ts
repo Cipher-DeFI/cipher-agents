@@ -29,7 +29,7 @@ export const cipherPlugin: Plugin = {
 
     
   init: async (config: Record<string, string>, runtime: IAgentRuntime) => {
-    console.log('✨ F.U.M Plugin initialized');
+    console.log('✨ Cipher Plugin initialized');
     
     const requiredKeys = ['COINGECKO_API_KEY'];
     for (const key of requiredKeys) {
@@ -40,4 +40,4 @@ export const cipherPlugin: Plugin = {
   }
 };
 
-export default fumPlugin;
+export default cipherPlugin;

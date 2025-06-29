@@ -75,7 +75,7 @@ export const CommitmentAnalysisAction: Action = {
           await callback?.({
             text: errorMessage,
             thought: `Token ${tokenSymbol} validation failed`,
-            actions: ['FUM_ANALYZE_COMMITMENT']
+            actions: ['CIPHER_ANALYZE_COMMITMENT']
           });
           return false;
         }
@@ -86,7 +86,7 @@ export const CommitmentAnalysisAction: Action = {
           await callback?.({
             text: `Unable to fetch market data for ${tokenSymbol}. Please try again later.`,
             thought: `Failed to fetch token data for ${tokenSymbol}`,
-            actions: ['FUM_ANALYZE_COMMITMENT']
+            actions: ['CIPHER_ANALYZE_COMMITMENT']
           });
           return false;
         }
@@ -107,7 +107,7 @@ export const CommitmentAnalysisAction: Action = {
         await callback?.({
           text: formatPriceBasedCommitmentResponse(analysis, fearGreedData, validationResult),
           thought: `Analyzed price-based commitment: ${amount} ${tokenSymbol} until price reaches $${upTarget} or $${downTarget} with real market data and Fear & Greed Index`,
-          actions: ['FUM_ANALYZE_COMMITMENT'],
+          actions: ['CIPHER_ANALYZE_COMMITMENT'],
           metadata: {
             amount,
             token: tokenSymbol,
@@ -166,7 +166,7 @@ export const CommitmentAnalysisAction: Action = {
           await callback?.({
             text: errorMessage,
             thought: `Token ${tokenSymbol} validation failed`,
-            actions: ['FUM_ANALYZE_COMMITMENT']
+            actions: ['CIPHER_ANALYZE_COMMITMENT']
           });
           return false;
         }
@@ -177,7 +177,7 @@ export const CommitmentAnalysisAction: Action = {
           await callback?.({
             text: `Unable to fetch market data for ${tokenSymbol}. Please try again later.`,
             thought: `Failed to fetch token data for ${tokenSymbol}`,
-            actions: ['FUM_ANALYZE_COMMITMENT']
+            actions: ['CIPHER_ANALYZE_COMMITMENT']
           });
           return false;
         }
@@ -197,7 +197,7 @@ export const CommitmentAnalysisAction: Action = {
         await callback?.({
           text: formatCommitmentResponse(analysis, amount, tokenSymbol, duration, unit, tokenData, fearGreedData, validationResult),
           thought: `Analyzed commitment: ${amount} ${tokenSymbol} for ${duration} ${unit} with real market data, Fear & Greed Index, and price predictions`,
-          actions: ['FUM_ANALYZE_COMMITMENT'],
+          actions: ['CIPHER_ANALYZE_COMMITMENT'],
           metadata: {
             amount,
             token: tokenSymbol,
@@ -229,7 +229,7 @@ export const CommitmentAnalysisAction: Action = {
         await callback?.({
           text: formatGeneralAnalysis(text, fearGreedData, marketData),
           thought: `Provided general market analysis and behavioral insights for user query: "${text}"`,
-          actions: ['FUM_ANALYZE_COMMITMENT'],
+          actions: ['CIPHER_ANALYZE_COMMITMENT'],
           metadata: {
             fearGreedIndex: fearGreedData?.value || null,
             marketData: marketData,
@@ -245,7 +245,7 @@ export const CommitmentAnalysisAction: Action = {
       await callback?.({
         text: 'I encountered an error while analyzing your commitment request. Please try again.',
         thought: `Error: ${error.message}`,
-        actions: ['FUM_ANALYZE_COMMITMENT']
+        actions: ['CIPHER_ANALYZE_COMMITMENT']
       });
       return false;
     }
@@ -261,7 +261,7 @@ export const CommitmentAnalysisAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Analyzing your commitment proposal with real market data and Fear & Greed Index...',
-          actions: ['FUM_ANALYZE_COMMITMENT']
+          actions: ['CIPHER_ANALYZE_COMMITMENT']
         }
       }
     ],
@@ -274,7 +274,7 @@ export const CommitmentAnalysisAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Analyzing your Ethereum commitment proposal with real market data and Fear & Greed Index...',
-          actions: ['FUM_ANALYZE_COMMITMENT']
+          actions: ['CIPHER_ANALYZE_COMMITMENT']
         }
       }
     ],
@@ -287,7 +287,7 @@ export const CommitmentAnalysisAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Analyzing your short-term commitment proposal with real market data and Fear & Greed Index...',
-          actions: ['FUM_ANALYZE_COMMITMENT']
+          actions: ['CIPHER_ANALYZE_COMMITMENT']
         }
       }
     ],
@@ -300,7 +300,7 @@ export const CommitmentAnalysisAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Analyzing your ultra-short commitment proposal with real market data and Fear & Greed Index...',
-          actions: ['FUM_ANALYZE_COMMITMENT']
+          actions: ['CIPHER_ANALYZE_COMMITMENT']
         }
       }
     ],
@@ -313,7 +313,7 @@ export const CommitmentAnalysisAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Analyzing your daily commitment proposal with real market data and Fear & Greed Index...',
-          actions: ['FUM_ANALYZE_COMMITMENT']
+          actions: ['CIPHER_ANALYZE_COMMITMENT']
         }
       }
     ],
@@ -326,7 +326,7 @@ export const CommitmentAnalysisAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Providing behavioral analysis and market insights to help with FOMO concerns...',
-          actions: ['FUM_ANALYZE_COMMITMENT']
+          actions: ['CIPHER_ANALYZE_COMMITMENT']
         }
       }
     ],
@@ -339,7 +339,7 @@ export const CommitmentAnalysisAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Analyzing current market conditions and behavioral insights...',
-          actions: ['FUM_ANALYZE_COMMITMENT']
+          actions: ['CIPHER_ANALYZE_COMMITMENT']
         }
       }
     ],
@@ -352,7 +352,7 @@ export const CommitmentAnalysisAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Analyzing your price-based commitment proposal...',
-          actions: ['FUM_ANALYZE_COMMITMENT']
+          actions: ['CIPHER_ANALYZE_COMMITMENT']
         }
       }
     ]
@@ -384,7 +384,7 @@ async function analyzeCommitmentWithRealData(
 
   if (validationResult.tokenInfo) {
     score += 5;
-    factors.push(`Token ${tokenSymbol} is supported by FUMVault`);
+    factors.push(`Token ${tokenSymbol} is supported by CipherVault`);
     tokenInsights.push(`${validationResult.tokenInfo.name} is a verified supported token`);
     tokenInsights.push(`Network: ${validationResult.tokenInfo.network}`);
   }

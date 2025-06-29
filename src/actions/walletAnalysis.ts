@@ -45,7 +45,7 @@ export const WalletAnalysisAction: Action = {
       await callback?.({
         text: response,
         thought: `Analyzed wallet trading history for ${walletAddress || 'user'} with comprehensive risk assessment and market analysis`,
-        actions: ['FUM_ANALYZE_WALLET', 'FUM_ANALYZE_COMMITMENT'],
+        actions: ['CIPHER_ANALYZE_WALLET', 'CIPHER_ANALYZE_COMMITMENT'],
         metadata: {
           walletAddress,
           analysis,
@@ -59,7 +59,7 @@ export const WalletAnalysisAction: Action = {
       await callback?.({
         text: 'I encountered an error while analyzing your wallet. Please try again or provide more specific information about your trading history.',
         thought: `Wallet analysis failed: ${error}`,
-        actions: ['FUM_ANALYZE_WALLET']
+        actions: ['CIPHER_ANALYZE_WALLET']
       });
       return false;
     }

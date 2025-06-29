@@ -116,7 +116,7 @@ export function formatCommitmentResponse(
     tokenInfo = `**Token Information:**
   • Network: ${validationResult.tokenInfo.network}
   • Token: ${validationResult.tokenInfo.name} (${validationResult.tokenInfo.symbol})
-  • Status: ✅ Supported by FUMVault`;
+  • Status: ✅ Supported by CipherVault`;
   }
 
   const formatPricePredictions = (predictions: PricePrediction[]): string => {
@@ -302,7 +302,7 @@ export function formatPriceBasedCommitmentResponse(
     tokenInfo = `**Token Information:**
   • Network: ${validationResult.tokenInfo.network}
   • Token: ${validationResult.tokenInfo.name} (${validationResult.tokenInfo.symbol})
-  • Status: ✅ Supported by FUMVault`;
+  • Status: ✅ Supported by CipherVault`;
   }
 
   const riskEmoji = overallRisk === 'EXTREME' ? '🔥' : overallRisk === 'HIGH' ? '⚠️' : overallRisk === 'LOW' ? '🟢' : '🟡';

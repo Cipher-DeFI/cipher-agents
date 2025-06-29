@@ -47,7 +47,7 @@ export class SupportedTokenMappingService extends TokenMappingService {
     if (!tokenInfo) {
       return {
         isValid: false,
-        error: `Token ${symbol} is not supported by FUMVault`,
+        error: `Token ${symbol} is not supported by CipherVault`,
         suggestions: this.getSuggestions(symbol)
       };
     }
@@ -55,7 +55,7 @@ export class SupportedTokenMappingService extends TokenMappingService {
     if (!tokenInfo.isSupported) {
       return {
         isValid: false,
-        error: `Token ${symbol} is not currently supported by FUMVault`,
+        error: `Token ${symbol} is not currently supported by CipherVault`,
         suggestions: Object.keys(this.supportedTokens)
           .filter(s => this.supportedTokens[s].isSupported)
           .slice(0, 5)

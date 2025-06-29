@@ -119,7 +119,7 @@ The API returns structured data with AI analysis:
     "analysis": {
       "score": 75,
       "recommendation": "RECOMMENDED",
-      "factors": ["Token is supported by FUMVault", "..."],
+      "factors": ["Token is supported by CipherVault", "..."],
       "riskLevel": "MODERATE",
       "behavioralInsights": ["3-6 month commitments align with market cycles", "..."],
       "marketConditions": ["Asset trading below recent highs", "..."],

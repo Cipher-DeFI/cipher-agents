@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "fum-ai-agents",
+      "name": "cipher-ai-agent",
       "dependencies": {
         "@elizaos/cli": "latest",
         "@elizaos/core": "latest",

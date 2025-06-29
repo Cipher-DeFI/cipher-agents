@@ -5,7 +5,7 @@ import {
   type ProjectAgent,
 } from '@elizaos/core';
 import { cipherPlugin } from './plugin';
-import { cipherAdvisor } from './characters/cipher_advisor_legacy';
+import { cipherAdvisor } from './characters/cipher_advisor';
 
 const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
   logger.info('Initializing character');

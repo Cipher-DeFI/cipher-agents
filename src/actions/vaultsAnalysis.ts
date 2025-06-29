@@ -39,7 +39,7 @@ export const VaultsAnalysisAction: Action = {
       await callback?.({
         text: response,
         thought: `Analyzed ${analysis.totalVaults} vaults with ${analysis.successRate.toFixed(1)}% success rate and ${analysis.totalValueLocked.toFixed(2)} total value locked`,
-        actions: ['FUM_ANALYZE_VAULTS', 'FUM_ANALYZE_COMMITMENT'],
+        actions: ['CIPHER_ANALYZE_VAULTS', 'CIPHER_ANALYZE_COMMITMENT'],
         metadata: {
           analysis,
           marketData,
@@ -53,7 +53,7 @@ export const VaultsAnalysisAction: Action = {
       await callback?.({
         text: 'I encountered an error while analyzing the vault data. Please try again later.',
         thought: `Vaults analysis failed: ${error}`,
-        actions: ['FUM_ANALYZE_VAULTS']
+        actions: ['CIPHER_ANALYZE_VAULTS']
       });
       return false;
     }
