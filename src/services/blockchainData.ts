@@ -296,7 +296,7 @@ export class BlockchainDataService {
       gasPrice: tx.gasPrice,
       gasUsed: tx.gasUsed,
       isError: false,
-      chain: 'ETH' // Will be overridden by caller
+      chain: 'ETH'
     };
   }
 
@@ -310,7 +310,7 @@ export class BlockchainDataService {
       gasPrice: tx.gas_price,
       gasUsed: tx.receipt_gas_used,
       isError: false,
-      chain: 'ETH' // Will be overridden by caller
+      chain: 'ETH'
     };
   }
 

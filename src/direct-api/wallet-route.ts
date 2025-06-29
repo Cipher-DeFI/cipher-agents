@@ -15,11 +15,16 @@ export const walletAnalysisRoute: Route = {
         });
       }
 
+      let fullText = text;
+      if (walletAddress) {
+        fullText = `${text} ${walletAddress}`;
+      }
+
       const tempMessage: Memory = {
         id: uuidv4() as UUID,
         entityId: uuidv4() as UUID,
         agentId: runtime.agentId,
-        content: { text },
+        content: { text: fullText },
         roomId: uuidv4() as UUID,
         createdAt: Date.now(),
       };

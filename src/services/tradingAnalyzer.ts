@@ -182,56 +182,84 @@ export class TradingAnalyzer {
       private detectEmotionalTrading(transactions: WalletTransaction[]): string[] {
         const indicators: string[] = [];
         
-        const sells = transactions.filter(tx => tx.from.toLowerCase() === tx.from.toLowerCase());
-        const panicSells = this.detectPanicPatterns(sells);
-        if (panicSells) indicators.push('Detected panic selling during market downturns');
+        if (transactions.length === 0) {
+          return indicators;
+        }
         
-        const buys = transactions.filter(tx => tx.to.toLowerCase() === tx.to.toLowerCase());
-        const fomoBuys = this.detectFOMOPatterns(buys);
-        if (fomoBuys) indicators.push('FOMO buying patterns detected during price rallies');
+        const recentTransactions = transactions
+          .sort((a, b) => b.timestamp - a.timestamp)
+          .slice(0, 10);
         
-        const revengeTrades = this.detectRevengeTrading(transactions);
-        if (revengeTrades) indicators.push('Revenge trading after losses detected');
+        if (recentTransactions.length >= 3) {
+          for (let i = 0; i < recentTransactions.length - 2; i++) {
+            const timeDiff1 = recentTransactions[i].timestamp - recentTransactions[i + 1].timestamp;
+            const timeDiff2 = recentTransactions[i + 1].timestamp - recentTransactions[i + 2].timestamp;
+            
+            if (timeDiff1 < 60 * 60 * 1000 && timeDiff2 < 60 * 60 * 1000) {
+              indicators.push('Detected rapid successive transactions indicating potential emotional trading');
+              break;
+            }
+          }
+        }
+        
+        if (transactions.length >= 5) {
+          const sortedTx = transactions.sort((a, b) => a.timestamp - b.timestamp);
+          const timeSpan = sortedTx[sortedTx.length - 1].timestamp - sortedTx[0].timestamp;
+          const daysSpan = timeSpan / (1000 * 60 * 60 * 24);
+          
+          if (daysSpan > 0 && transactions.length / daysSpan > 10) {
+            indicators.push('High transaction frequency detected - consider implementing trading limits');
+          }
+        }
         
         return indicators;
-      }
-    
-      private detectPanicPatterns(sells: WalletTransaction[]): boolean {
-        for (let i = 0; i < sells.length - 2; i++) {
-          const timeDiff = sells[i + 2].timestamp - sells[i].timestamp;
-          if (timeDiff < 24 * 60 * 60 * 1000) return true;
-        }
-        return false;
-      }
-    
-      private detectFOMOPatterns(buys: WalletTransaction[]): boolean {
-        for (let i = 0; i < buys.length - 2; i++) {
-          const timeDiff = buys[i + 2].timestamp - buys[i].timestamp;
-          if (timeDiff < 24 * 60 * 60 * 1000) return true;
-        }
-        return false;
-      }
-    
-      private detectRevengeTrading(transactions: WalletTransaction[]): boolean {
-        return false;
       }
     
       private calculateProfitLoss(tokenTrades: Map<string, WalletTransaction[]>): {
         profitLossRatio: number;
         winRate: number;
       } {
+        // For now, return reasonable defaults since we don't have price data
+        // In a real implementation, you would need historical price data to calculate actual P&L
         return {
-          profitLossRatio: 1.2,
-          winRate: 0.55
+          profitLossRatio: 1.0, // Neutral
+          winRate: 0.5 // 50% win rate as default
         };
       }
     
       private calculateMaxDrawdown(transactions: WalletTransaction[]): number {
-        return 15;
+        // Calculate max drawdown based on transaction frequency and timing
+        if (transactions.length < 3) return 0;
+        
+        const sortedTx = transactions.sort((a, b) => a.timestamp - b.timestamp);
+        let maxDrawdown = 0;
+        
+        // Simple heuristic: if there are many transactions in a short period, assume higher drawdown
+        const timeSpan = sortedTx[sortedTx.length - 1].timestamp - sortedTx[0].timestamp;
+        const daysSpan = timeSpan / (1000 * 60 * 60 * 24);
+        
+        if (daysSpan > 0) {
+          const txPerDay = transactions.length / daysSpan;
+          maxDrawdown = Math.min(txPerDay * 2, 50); // Cap at 50%
+        }
+        
+        return maxDrawdown;
       }
     
       private calculateSharpeRatio(tokenTrades: Map<string, WalletTransaction[]>): number {
-        return 1.2;
+        // Calculate a simplified Sharpe ratio based on trading patterns
+        if (tokenTrades.size === 0) return 0;
+        
+        let totalTrades = 0;
+        tokenTrades.forEach(trades => {
+          totalTrades += trades.length;
+        });
+        
+        // Higher number of trades with good diversification suggests better risk-adjusted returns
+        const diversificationBonus = Math.min(tokenTrades.size * 0.1, 0.5);
+        const tradeFrequencyBonus = Math.min(totalTrades * 0.01, 0.3);
+        
+        return Math.min(1.0 + diversificationBonus + tradeFrequencyBonus, 2.0);
       }
     
       private calculateTradeSizes(transactions: WalletTransaction[]): {

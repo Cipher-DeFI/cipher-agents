@@ -72,22 +72,67 @@ async function analyzeWalletTradingHistory(
     runtime: IAgentRuntime
   ): Promise<WalletAnalysisResult> {  
     try {
+      if (!walletAddress) {
+        return {
+          riskScore: 50,
+          confidencePercentage: 30,
+          riskProfile: 'MODERATE_RISK',
+          marketAnalysis: analyzeMarketConditions(marketData),
+          userTradingFactors: {
+            averageHoldTime: 30,
+            tradeFrequency: 0,
+            volatilityTolerance: 50,
+            diversificationScore: 50,
+            emotionalTradingIndicators: [],
+            ethActivity: 0,
+            avaxActivity: 0
+          },
+          riskTolerance: 'MODERATE',
+          personalizedRecommendations: [
+            'No wallet address provided. Please provide a valid wallet address for personalized analysis.',
+            'Consider implementing basic risk management strategies.',
+            'Start with small position sizes and gradually increase as you gain experience.'
+          ]
+        };
+      }
+
       const blockchainService = new BlockchainDataService(runtime);
       const analyzer = new TradingAnalyzer();
       
       const [transactions, tokenBalances] = await Promise.all([
-        blockchainService.getAllChainsTransactions(walletAddress || '0x0000000000000000000000000000000000000000'),
-        blockchainService.getAllChainsTokenBalances(walletAddress || '0x0000000000000000000000000000000000000000')
+        blockchainService.getAllChainsTransactions(walletAddress),
+        blockchainService.getAllChainsTokenBalances(walletAddress)
       ]);
       
+      if (transactions.length === 0) {
+        return {
+          riskScore: 20,
+          confidencePercentage: 40,
+          riskProfile: 'LOW_RISK',
+          marketAnalysis: analyzeMarketConditions(marketData),
+          userTradingFactors: {
+            averageHoldTime: 0,
+            tradeFrequency: 0,
+            volatilityTolerance: 0,
+            diversificationScore: 0,
+            emotionalTradingIndicators: [],
+            ethActivity: 0,
+            avaxActivity: 0
+          },
+          riskTolerance: 'CONSERVATIVE',
+          personalizedRecommendations: [
+            'No trading activity found for this wallet address.',
+            'This could be a new wallet or one with no recent transactions.',
+            'Consider starting with small investments and building your trading history gradually.',
+            'Focus on learning and understanding market dynamics before making significant trades.'
+          ]
+        };
+      }
+      
       const tradingMetrics = analyzer.analyzeTradingHistory(transactions, tokenBalances);
-      
       const riskScore = calculateRiskScore(tradingMetrics);
-      
-      const confidencePercentage = calculateConfidencePercentage(tradingMetrics);
-      
+      const confidencePercentage = calculateConfidencePercentage(tradingMetrics); 
       const riskProfile = determineRiskProfile(riskScore);
-      
       const marketAnalysis = analyzeMarketConditions(marketData);
       
       const userTradingFactors = {
@@ -120,8 +165,31 @@ async function analyzeWalletTradingHistory(
         personalizedRecommendations
       };
     } catch (error) {
-      console.error('Error fetching real wallet data:', error);
-      throw error;
+      console.error('Error analyzing wallet:', error);
+      return {
+        riskScore: 50,
+        confidencePercentage: 20,
+        riskProfile: 'MODERATE_RISK',
+        marketAnalysis: analyzeMarketConditions(marketData),
+        userTradingFactors: {
+          averageHoldTime: 30,
+          tradeFrequency: 0,
+          volatilityTolerance: 50,
+          diversificationScore: 50,
+          emotionalTradingIndicators: [],
+          ethActivity: 0,
+          avaxActivity: 0
+        },
+        riskTolerance: 'MODERATE',
+        personalizedRecommendations: [
+          'Unable to fetch wallet data. This could be due to:',
+          '- Invalid wallet address format',
+          '- Network connectivity issues',
+          '- API rate limits or service unavailability',
+          'Please verify the wallet address and try again.',
+          'Consider using a different wallet address or checking your internet connection.'
+        ]
+      };
     }
   }
 
