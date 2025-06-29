@@ -5,7 +5,7 @@ import { MarketData, VaultData, VaultsAnalysisResult, VaultInsight } from '../ty
 export const VaultsAnalysisAction: Action = {
   name: 'CIPHER_ANALYZE_VAULTS',
   similes: ['VAULT_PATTERN_ANALYSIS', 'COMMITMENT_BEHAVIOR_ANALYSIS', 'LOCKING_TREND_ANALYSIS', 'VAULT_SUCCESS_RATE', 'COMMUNITY_BEHAVIOR_INSIGHTS'],
-  description: 'Analyzes the last 10 vault lock data to provide insights into community commitment patterns, success rates, and behavioral trends',
+  description: 'Analyzes the last 100 vault lock data to provide insights into community commitment patterns, success rates, and behavioral trends',
   
   validate: async (runtime: IAgentRuntime, message: Memory, state?: State) => {
     const text = message.content?.text || '';
@@ -62,7 +62,7 @@ export const VaultsAnalysisAction: Action = {
 
 async function fetchVaultsData(): Promise<VaultData[]> {
   try {
-    const response = await fetch('https://cipher-indexer.up.railway.app/vaults?limit=30');
+    const response = await fetch('https://cipher-indexer.up.railway.app/vaults?limit=100');
     
     if (!response.ok) {
       throw new Error(`Failed to fetch vaults data: ${response.status}`);
@@ -361,7 +361,7 @@ ${analysis.recommendations.map(rec => rec).join('\n\n')}
 ## 🎯 **Community Health Score**
 Based on the analysis, the community shows ${analysis.successRate > 80 ? 'excellent' : analysis.successRate > 60 ? 'good' : 'room for improvement'} commitment to behavioral improvement through vault locking mechanisms.
 
-*This analysis is based on the last 10 vault transactions. For more comprehensive insights, consider analyzing a larger dataset.*`;
+*This analysis is based on the last 100 vault transactions. For more comprehensive insights, consider analyzing a larger dataset.*`;
 
   if (marketData) {
     response += `\n\n**Current Market Context:** ${sentimentEmoji} Fear & Greed Index: ${marketData.fearGreedIndex} (${marketData.fearGreedIndex > 60 ? 'Greed' : marketData.fearGreedIndex < 40 ? 'Fear' : 'Neutral'})`;
