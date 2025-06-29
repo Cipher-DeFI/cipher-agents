@@ -71,7 +71,6 @@ export const walletAnalysisRoute: Route = {
       res.json({
         success: true,
         data: {
-          response: responseText,
           action: actionName,
           character: runtime.character.name,
           riskScore: analysis?.riskScore || null,

@@ -1,8 +1,8 @@
 import { Action, IAgentRuntime, Memory, State, HandlerCallback } from '@elizaos/core';
 import { SupportedTokenMappingService } from '../services/supportedTokenMapping';
 import { MarketDataService } from '../services/marketData';
-import { CommitmentAnalysis, FearGreedData, EnhancedCommitmentAnalysis, PriceBasedCommitmentAnalysis, PriceTargetAnalysis } from '../types';
-import { formatCommitmentResponse, formatGeneralAnalysis, calculateVolatility, calculateMaxDrawdown, formatPriceBasedCommitmentResponse, calculateAverageAnnualReturn, calculateExpectedReturn, calculatePricePredictions } from '../utils/commitmentUtils';
+import { CommitmentAnalysis, FearGreedData, EnhancedCommitmentAnalysis, PriceBasedCommitmentAnalysis, PriceTargetAnalysis, CombinedCommitmentAnalysis } from '../types';
+import { formatCommitmentResponse, formatGeneralAnalysis, calculateVolatility, calculateMaxDrawdown, formatPriceBasedCommitmentResponse, calculateAverageAnnualReturn, calculateExpectedReturn, calculatePricePredictions, formatCombinedCommitmentResponse } from '../utils/commitmentUtils';
 
 export const CommitmentAnalysisAction: Action = {
   name: 'CIPHER_ANALYZE_COMMITMENT',
@@ -29,6 +29,11 @@ export const CommitmentAnalysisAction: Action = {
                                text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+until\s+(?:the\s+)?price\s+(?:reaches|hits)?\s*\$?(\d+\.?\d*)\s+or\s+\$?(\d+\.?\d*)/i) ||
                                text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+(?:until|till)\s+\$?(\d+\.?\d*)\s+or\s+\$?(\d+\.?\d*)/i);
       
+      const combinedPattern = text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+until\s+(?:either\s+)?(?:the\s+)?price\s+(?:goes\s+)?(?:up\s+)?to\s+\$?(\d+\.?\d*)\s+(?:or|and)\s+(?:price\s+)?(?:goes\s+)?(?:down\s+)?to\s+\$?(\d+\.?\d*)\s+(?:or|and)\s+for\s+(\d+)\s+(minutes?|hours?|days?|weeks?|months?|years?)/i) ||
+                             text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+until\s+(?:the\s+)?price\s+(?:reaches|hits)?\s*\$?(\d+\.?\d*)\s+or\s+\$?(\d+\.?\d*)\s+or\s+for\s+(\d+)\s+(minutes?|hours?|days?|weeks?|months?|years?)/i) ||
+                             text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+(?:until|till)\s+\$?(\d+\.?\d*)\s+or\s+\$?(\d+\.?\d*)\s+or\s+for\s+(\d+)\s+(minutes?|hours?|days?|weeks?|months?|years?)/i) ||
+                             text.match(/lock\s+(\d+\.?\d*)\s+(AVAX|ETH|MONAD)\s+for\s+(\d+)\s+(minutes?|hours?|days?|weeks?|months?|years?)\s+or\s+until\s+(?:the\s+)?price\s+(?:goes\s+)?(?:up\s+)?to\s+\$?(\d+\.?\d*)\s+(?:or|and)\s+(?:price\s+)?(?:goes\s+)?(?:down\s+)?to\s+\$?(\d+\.?\d*)/i);
+      
       const tokenService = new SupportedTokenMappingService(runtime);
       const marketDataService = new MarketDataService(runtime);
       
@@ -41,6 +46,103 @@ export const CommitmentAnalysisAction: Action = {
           classification: marketData.sentiment,
           timestamp: marketData.timestamp
         };
+      }
+      
+      if (combinedPattern) {
+        const amount = parseFloat(combinedPattern[1]);
+        const tokenSymbol = combinedPattern[2].toUpperCase();
+        const upTarget = parseFloat(combinedPattern[3]);
+        const downTarget = parseFloat(combinedPattern[4]);
+        const duration = parseInt(combinedPattern[5]);
+        const unit = combinedPattern[6].toLowerCase();
+        
+        let durationInDays = duration;
+        if (unit.includes('minute')) durationInDays = duration / (24 * 60);
+        if (unit.includes('hour')) durationInDays = duration / 24;
+        if (unit.includes('week')) durationInDays *= 7;
+        if (unit.includes('month')) durationInDays *= 30;
+        if (unit.includes('year')) durationInDays *= 365;
+        
+        const validationResult = await tokenService.validateToken(tokenSymbol);
+        
+        if (!validationResult.isValid) {
+          let errorMessage = `I couldn't validate "${tokenSymbol}" as a supported token. `;
+          
+          if (validationResult.error) {
+            errorMessage += validationResult.error + '\n\n';
+          }
+          
+          if (validationResult.suggestions && validationResult.suggestions.length > 0) {
+            errorMessage += `Supported tokens:\n`;
+            validationResult.suggestions.forEach(suggestion => {
+              errorMessage += `• ${suggestion.toUpperCase()}\n`;
+            });
+          } else {
+            errorMessage += `Supported tokens:\n`;
+            errorMessage += `• AVAX (Avalanche)\n`;
+            errorMessage += `• ETH (Ethereum)\n`;
+            errorMessage += `• MONAD (Monad)\n`;
+          }
+          
+          errorMessage += `\nPlease try again with a supported token.`;
+          
+          await callback?.({
+            text: errorMessage,
+            thought: `Token ${tokenSymbol} validation failed`,
+            actions: ['CIPHER_ANALYZE_COMMITMENT']
+          });
+          return false;
+        }
+
+        const tokenData = await tokenService.getTokenData(tokenSymbol);
+        
+        if (!tokenData) {
+          await callback?.({
+            text: `Unable to fetch market data for ${tokenSymbol}. Please try again later.`,
+            thought: `Failed to fetch token data for ${tokenSymbol}`,
+            actions: ['CIPHER_ANALYZE_COMMITMENT']
+          });
+          return false;
+        }
+
+        const historicalData = await tokenService.getHistoricalData(tokenSymbol, Math.max(365, durationInDays));
+        
+        const analysis = await analyzeCombinedCommitment(
+          tokenData,
+          historicalData,
+          amount,
+          tokenSymbol,
+          upTarget,
+          downTarget,
+          durationInDays,
+          unit,
+          fearGreedData,
+          validationResult
+        );
+        
+        await callback?.({
+          text: formatCombinedCommitmentResponse(analysis, fearGreedData, validationResult),
+          thought: `Analyzed combined commitment: ${amount} ${tokenSymbol} until price reaches $${upTarget} or $${downTarget} or for ${duration} ${unit} with real market data and Fear & Greed Index`,
+          actions: ['CIPHER_ANALYZE_COMMITMENT'],
+          metadata: {
+            amount,
+            token: tokenSymbol,
+            upTarget,
+            downTarget,
+            durationInDays,
+            unit,
+            analysis: analysis,
+            fearGreedData: fearGreedData ? {
+              value: fearGreedData.value,
+              classification: fearGreedData.classification,
+              timestamp: fearGreedData.timestamp
+            } : null,
+            marketData: marketData,
+            validation: validationResult
+          }
+        });
+        
+        return true;
       }
       
       if (priceBasedPattern) {
@@ -352,6 +454,19 @@ export const CommitmentAnalysisAction: Action = {
         name: '{{agent}}',
         content: {
           text: 'Analyzing your price-based commitment proposal...',
+          actions: ['CIPHER_ANALYZE_COMMITMENT']
+        }
+      }
+    ],
+    [
+      {
+        name: '{{user1}}',
+        content: { text: 'I want to lock 2 ETH until either the price goes up to $4000 or goes down to $3000 or for 6 months' }
+      },
+      {
+        name: '{{agent}}',
+        content: {
+          text: 'Analyzing your combined commitment proposal with time and price-based exit conditions...',
           actions: ['CIPHER_ANALYZE_COMMITMENT']
         }
       }
@@ -920,5 +1035,201 @@ async function analyzePriceTarget(
     probability,
     riskFactors,
     marketConditions
+  };
+}
+
+async function analyzeCombinedCommitment(
+  tokenData: any,
+  historicalData: number[][] | null,
+  amount: number,
+  tokenSymbol: string,
+  upTarget: number,
+  downTarget: number,
+  durationInDays: number,
+  durationUnit: string,
+  fearGreedData: FearGreedData | null,
+  validationResult: any
+): Promise<CombinedCommitmentAnalysis> {
+  const currentPrice = tokenData?.market_data?.current_price?.usd || tokenData?.current_price || 0;
+
+  if (upTarget <= currentPrice) {
+    throw new Error(`Up target (${upTarget}) must be higher than current price (${currentPrice})`);
+  }
+  if (downTarget >= currentPrice) {
+    throw new Error(`Down target (${downTarget}) must be lower than current price (${currentPrice})`);
+  }
+  
+  const upTargetAnalysis = await analyzePriceTarget(
+    currentPrice,
+    upTarget,
+    'UP',
+    historicalData,
+    fearGreedData,
+    tokenData,
+    validationResult
+  );
+  
+  const downTargetAnalysis = await analyzePriceTarget(
+    currentPrice,
+    downTarget,
+    'DOWN',
+    historicalData,
+    fearGreedData,
+    tokenData,
+    validationResult
+  );
+  
+  const timeBasedAnalysis = await analyzeCommitmentWithRealData(
+    tokenData,
+    historicalData,
+    amount,
+    durationInDays,
+    tokenSymbol,
+    fearGreedData,
+    validationResult
+  );
+  
+  const upScenarioReturn = (upTarget - currentPrice) / currentPrice * 100;
+  const downScenarioReturn = (downTarget - currentPrice) / currentPrice * 100;
+  const timeBasedReturn = timeBasedAnalysis.expectedReturn.expectedReturnPercentage;
+  
+  const timeBasedExitProb = Math.max(0.1, Math.min(0.9, 1 - (upTargetAnalysis.probability + downTargetAnalysis.probability) / 2));
+  const priceUpExitProb = upTargetAnalysis.probability * (1 - timeBasedExitProb);
+  const priceDownExitProb = downTargetAnalysis.probability * (1 - timeBasedExitProb);
+  
+  const totalProb = timeBasedExitProb + priceUpExitProb + priceDownExitProb;
+  const normalizedTimeProb = timeBasedExitProb / totalProb;
+  const normalizedUpProb = priceUpExitProb / totalProb;
+  const normalizedDownProb = priceDownExitProb / totalProb;
+  
+  let mostLikelyExit: 'TIME' | 'PRICE_UP' | 'PRICE_DOWN' = 'TIME';
+  if (normalizedUpProb > normalizedTimeProb && normalizedUpProb > normalizedDownProb) {
+    mostLikelyExit = 'PRICE_UP';
+  } else if (normalizedDownProb > normalizedTimeProb && normalizedDownProb > normalizedUpProb) {
+    mostLikelyExit = 'PRICE_DOWN';
+  }
+  
+  const weightedAverage = (timeBasedReturn * normalizedTimeProb + 
+                          upScenarioReturn * normalizedUpProb + 
+                          downScenarioReturn * normalizedDownProb);
+  
+  const bestCase = Math.max(timeBasedReturn, upScenarioReturn, downScenarioReturn);
+  const worstCase = Math.min(timeBasedReturn, upScenarioReturn, downScenarioReturn);
+  
+  let overallRisk: 'LOW' | 'MODERATE' | 'HIGH' | 'EXTREME' = 'MODERATE';
+  const timeRisk = durationInDays > 365 ? 2 : durationInDays > 180 ? 1 : 0;
+  const upRisk = upTargetAnalysis.expectedDays > 365 ? 2 : upTargetAnalysis.expectedDays > 180 ? 1 : 0;
+  const downRisk = downTargetAnalysis.expectedDays < 30 ? 2 : downTargetAnalysis.expectedDays < 90 ? 1 : 0;
+  const volatilityRisk = historicalData && calculateVolatility(historicalData) > 0.8 ? 2 : 
+                        historicalData && calculateVolatility(historicalData) > 0.6 ? 1 : 0;
+  const fearGreedRisk = fearGreedData && fearGreedData.value > 75 ? 2 : 
+                       fearGreedData && fearGreedData.value > 60 ? 1 : 0;
+  const tokenRisk = validationResult.tokenInfo ? 0 : 1;
+  
+  const totalRisk = timeRisk + upRisk + downRisk + volatilityRisk + fearGreedRisk + tokenRisk;
+  if (totalRisk >= 8) overallRisk = 'EXTREME';
+  else if (totalRisk >= 5) overallRisk = 'HIGH';
+  else if (totalRisk <= 2) overallRisk = 'LOW';
+  
+  const insights: string[] = [];
+  const recommendations: string[] = [];
+  
+  if (validationResult.tokenInfo) {
+    insights.push(`${validationResult.tokenInfo.name} is a supported token on ${validationResult.tokenInfo.network}`);
+    insights.push('Token has reliable price data for accurate target monitoring');
+  } else {
+    insights.push('Token validation failed - consider using supported tokens for better accuracy');
+    recommendations.push('Consider using AVAX or ETH for more reliable price monitoring');
+  }
+  
+  insights.push(`Most likely exit scenario: ${mostLikelyExit.replace('_', ' ')} (${(mostLikelyExit === 'TIME' ? normalizedTimeProb : mostLikelyExit === 'PRICE_UP' ? normalizedUpProb : normalizedDownProb) * 100}%)`);
+  
+  if (normalizedTimeProb > 0.5) {
+    insights.push('Time-based exit is most likely - consider if this aligns with your investment timeline');
+  } else if (normalizedUpProb > 0.4) {
+    insights.push('Price up exit is likely - good potential for early profit taking');
+  } else if (normalizedDownProb > 0.4) {
+    insights.push('Price down exit is likely - ensure you can handle the potential loss');
+  }
+  
+  if (durationInDays < upTargetAnalysis.expectedDays && durationInDays < downTargetAnalysis.expectedDays) {
+    insights.push('Time-based exit likely to occur before price targets are reached');
+  } else if (upTargetAnalysis.expectedDays < durationInDays && downTargetAnalysis.expectedDays < durationInDays) {
+    insights.push('Price targets likely to be reached before time expires');
+  }
+  
+  if (bestCase > 50) {
+    insights.push('High potential upside - ensure you can handle the volatility');
+  }
+  
+  if (worstCase < -30) {
+    insights.push('Significant downside risk - consider reducing the commitment amount');
+  }
+  
+  if (fearGreedData) {
+    if (fearGreedData.value <= 25) {
+      insights.push('Extreme fear sentiment - excellent timing for combined commitments');
+      recommendations.push('Consider increasing the amount due to favorable market conditions');
+    } else if (fearGreedData.value >= 75) {
+      insights.push('Extreme greed sentiment - high risk of market correction');
+      recommendations.push('Consider waiting for better market conditions or reducing amount');
+    }
+  }
+    
+  if (overallRisk === 'EXTREME') {
+    recommendations.push('Consider reducing the commitment amount');
+    recommendations.push('Shorten the time duration or adjust price targets');
+  }
+  
+  if (normalizedDownProb > 0.3) {
+    recommendations.push('Consider setting a higher down target for better protection');
+  }
+  
+  if (normalizedUpProb < 0.2) {
+    recommendations.push('Consider lowering the up target for higher probability of success');
+  }
+  
+  if (durationInDays < 7) {
+    recommendations.push('Consider extending the time duration for better behavioral benefits');
+  }
+  
+  if (Math.abs(upScenarioReturn) > 100 || Math.abs(downScenarioReturn) > 100) {
+    recommendations.push('Large potential gains/losses - ensure this represents acceptable risk');
+  }
+  
+  return {
+    amount,
+    tokenSymbol,
+    currentPrice,
+    durationInDays,
+    durationUnit,
+    upTarget,
+    downTarget,
+    upTargetAnalysis,
+    downTargetAnalysis,
+    timeBasedAnalysis,
+    overallRisk,
+    expectedReturn: {
+      timeBasedScenario: timeBasedReturn,
+      upScenario: upScenarioReturn,
+      downScenario: downScenarioReturn,
+      weightedAverage,
+      bestCase,
+      worstCase
+    },
+    insights,
+    recommendations,
+    timeToReachTargets: {
+      timeBased: durationInDays,
+      upTarget: upTargetAnalysis.expectedDays,
+      downTarget: downTargetAnalysis.expectedDays,
+      averageTime: (durationInDays + upTargetAnalysis.expectedDays + downTargetAnalysis.expectedDays) / 3
+    },
+    probabilityAnalysis: {
+      timeBasedExit: normalizedTimeProb,
+      priceUpExit: normalizedUpProb,
+      priceDownExit: normalizedDownProb,
+      mostLikelyExit
+    }
   };
 }

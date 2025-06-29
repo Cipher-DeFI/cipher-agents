@@ -62,7 +62,7 @@ export const VaultsAnalysisAction: Action = {
 
 async function fetchVaultsData(): Promise<VaultData[]> {
   try {
-    const response = await fetch('https://cipher-indexer.up.railway.app/vaults?limit=10');
+    const response = await fetch('https://cipher-indexer.up.railway.app/vaults?limit=30');
     
     if (!response.ok) {
       throw new Error(`Failed to fetch vaults data: ${response.status}`);
@@ -319,10 +319,8 @@ function formatVaultsAnalysisResponse(analysis: VaultsAnalysisResult, marketData
   const sentimentEmoji = marketData?.fearGreedIndex ? 
     (marketData.fearGreedIndex > 60 ? '🐂' : marketData.fearGreedIndex < 40 ? '🐻' : '➡️') : '➡️';
   
-  // Determine the primary token for display
   const primaryToken = analysis.topTokens.length > 0 ? analysis.topTokens[0].token : 'AVAX';
   
-  // Check if we have mixed tokens
   const hasMultipleTokens = analysis.topTokens.length > 1;
   const tokenDisplay = hasMultipleTokens ? 'tokens' : primaryToken;
   

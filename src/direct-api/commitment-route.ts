@@ -69,7 +69,6 @@ export const apiMessageRoute: Route = {
       res.json({
         success: true,
         data: {
-          response: responseText,
           action: actionName,
           character: runtime.character.name,
           
@@ -78,6 +77,8 @@ export const apiMessageRoute: Route = {
           tokenSymbol: responseData?.token || null,
           duration: responseData?.durationInDays || responseData?.duration || null,
           unit: responseData?.unit || 'days',
+          upTarget: responseData?.upTarget || null,
+          downTarget: responseData?.downTarget || null,
           fearAndGreed: responseData?.fearGreedData || null
         }
       });

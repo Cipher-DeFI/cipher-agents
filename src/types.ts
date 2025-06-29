@@ -125,6 +125,42 @@ export interface PriceBasedCommitmentAnalysis {
   };
 }
 
+export interface CombinedCommitmentAnalysis {
+  amount: number;
+  tokenSymbol: string;
+  currentPrice: number;
+  durationInDays: number;
+  durationUnit: string;
+  upTarget: number;
+  downTarget: number;
+  upTargetAnalysis: PriceTargetAnalysis;
+  downTargetAnalysis: PriceTargetAnalysis;
+  timeBasedAnalysis: EnhancedCommitmentAnalysis;
+  overallRisk: 'LOW' | 'MODERATE' | 'HIGH' | 'EXTREME';
+  expectedReturn: {
+    timeBasedScenario: number;
+    upScenario: number;
+    downScenario: number;
+    weightedAverage: number;
+    bestCase: number;
+    worstCase: number;
+  };
+  insights: string[];
+  recommendations: string[];
+  timeToReachTargets: {
+    timeBased: number;
+    upTarget: number;
+    downTarget: number;
+    averageTime: number;
+  };
+  probabilityAnalysis: {
+    timeBasedExit: number;
+    priceUpExit: number;
+    priceDownExit: number;
+    mostLikelyExit: 'TIME' | 'PRICE_UP' | 'PRICE_DOWN';
+  };
+}
+
 export interface WalletAnalysisResult {
   riskScore: number;
   confidencePercentage: number;

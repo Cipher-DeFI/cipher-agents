@@ -1,4 +1,4 @@
-import { FearGreedData, PricePrediction, EnhancedCommitmentAnalysis, PriceBasedCommitmentAnalysis, ExpectedReturn } from "../types";
+import { FearGreedData, PricePrediction, EnhancedCommitmentAnalysis, PriceBasedCommitmentAnalysis, ExpectedReturn, CombinedCommitmentAnalysis } from "../types";
 
 export function formatTimeUnit(days: number): string {
   if (days < 1/24) {
@@ -345,10 +345,10 @@ export function formatPriceBasedCommitmentResponse(
   • Average Time: ${formatTimeUnit(timeToReachTargets.averageTime)}
 
   **💡 Key Insights:**
-  ${insights.map(insight => `• ${insight}`).join('\n')}
+  ${insights.map((insight: string, index: number) => `${index + 1}. ${insight}`).join('\n')}
 
   **🎯 Recommendations:**
-  ${recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
+  ${recommendations.map((rec: string, index: number) => `${index + 1}. ${rec}`).join('\n')}
 
   Would you like me to help you optimize this price-based commitment or proceed with the vault creation?`;
 }
@@ -620,4 +620,153 @@ export async function calculateExpectedReturn(
     confidence: endPrediction.confidence,
     pricePredictions
   };
+}
+
+export function formatCombinedCommitmentResponse(
+  analysis: CombinedCommitmentAnalysis,
+  fearGreedData: FearGreedData | null,
+  validationResult?: any
+): string {
+  const { 
+    amount, 
+    tokenSymbol, 
+    currentPrice, 
+    durationInDays, 
+    durationUnit,
+    upTarget, 
+    downTarget, 
+    upTargetAnalysis, 
+    downTargetAnalysis, 
+    timeBasedAnalysis,
+    overallRisk, 
+    expectedReturn, 
+    insights, 
+    recommendations,
+    timeToReachTargets,
+    probabilityAnalysis
+  } = analysis;
+
+  const formatCurrency = (num: number): string => {
+    if (typeof num !== 'number' || isNaN(num)) return '0';
+    return num.toLocaleString ? num.toLocaleString() : num.toString();
+  };
+
+  const formatPercentage = (num: number): string => {
+    if (typeof num !== 'number' || isNaN(num)) return '0.00';
+    return num.toFixed ? num.toFixed(2) : num.toString();
+  };
+
+  const formatTimeUnit = (days: number): string => {
+    if (days < 1/24) {
+      const minutes = Math.round(days * 24 * 60);
+      return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+    } else if (days < 1) {
+      const hours = Math.round(days * 24);
+      return `${hours} hour${hours !== 1 ? 's' : ''}`;
+    } else if (days < 7) {
+      const dayCount = Math.round(days);
+      return `${dayCount} day${dayCount !== 1 ? 's' : ''}`;
+    } else if (days < 30) {
+      const weeks = Math.round(days / 7);
+      return `${weeks} week${weeks !== 1 ? 's' : ''}`;
+    } else if (days < 365) {
+      const months = Math.round(days / 30);
+      return `${months} month${months !== 1 ? 's' : ''}`;
+    } else {
+      const years = Math.round(days / 365);
+      return `${years} year${years !== 1 ? 's' : ''}`;
+    }
+  };
+
+  let fearGreedDisplay = '';
+  if (fearGreedData) {
+    const fearGreedEmoji = fearGreedData.value <= 25 ? '😱' :
+      fearGreedData.value <= 45 ? '😨' :
+        fearGreedData.value <= 55 ? '😐' :
+          fearGreedData.value <= 75 ? '😏' : '🤪';
+
+    fearGreedDisplay = `**Fear & Greed Index:** ${fearGreedData.value} (${fearGreedData.classification}) ${fearGreedEmoji}`;
+  }
+
+  let tokenInfo = '';
+  if (validationResult?.tokenInfo) {
+    tokenInfo = `**Token Information:**
+  • Network: ${validationResult.tokenInfo.network}
+  • Token: ${validationResult.tokenInfo.name} (${validationResult.tokenInfo.symbol})
+  • Status: ✅ Supported by CipherVault`;
+  }
+
+  const upTargetReturn = (upTarget - currentPrice) / currentPrice * 100;
+  const downTargetReturn = (downTarget - currentPrice) / currentPrice * 100;
+  const timeBasedReturn = expectedReturn.timeBasedScenario;
+
+  const riskEmoji = overallRisk === 'EXTREME' ? '🔥' : 
+                   overallRisk === 'HIGH' ? '⚠️' : 
+                   overallRisk === 'LOW' ? '🟢' : '🟡';
+
+  const mostLikelyExitEmoji = probabilityAnalysis.mostLikelyExit === 'TIME' ? '⏰' :
+                              probabilityAnalysis.mostLikelyExit === 'PRICE_UP' ? '📈' : '📉';
+
+  return `🎯 **Combined Commitment Analysis**
+  
+  **Proposal:** Lock ${amount} ${tokenSymbol} until either:
+  • Time expires: ${formatTimeUnit(durationInDays)} (${durationInDays} ${durationUnit})
+  • Price goes up to: $${formatCurrency(upTarget)} (+${formatPercentage(upTargetReturn)}%)
+  • Price goes down to: $${formatCurrency(downTarget)} (${formatPercentage(downTargetReturn)}%)
+  
+  **Current Price:** $${formatCurrency(currentPrice)}
+  **Total Value:** $${formatCurrency(amount * currentPrice)}
+  **Overall Risk:** ${overallRisk} ${riskEmoji}
+  
+  ${fearGreedDisplay}
+  
+  ${tokenInfo}
+  
+  **📊 Exit Probability Analysis:**
+  • Time-based exit: ${formatPercentage(probabilityAnalysis.timeBasedExit * 100)}% ⏰
+  • Price up exit: ${formatPercentage(probabilityAnalysis.priceUpExit * 100)}% 📈
+  • Price down exit: ${formatPercentage(probabilityAnalysis.priceDownExit * 100)}% 📉
+  • Most likely exit: ${probabilityAnalysis.mostLikelyExit.replace('_', ' ')} ${mostLikelyExitEmoji}
+  
+  **📈 Expected Return Scenarios:**
+  • **Time-based scenario:** ${timeBasedReturn > 0 ? '+' : ''}${formatPercentage(timeBasedReturn)}% (${formatTimeUnit(durationInDays)})
+  • **Price up scenario:** +${formatPercentage(upTargetReturn)}% (${formatTimeUnit(timeToReachTargets.upTarget)})
+  • **Price down scenario:** ${formatPercentage(downTargetReturn)}% (${formatTimeUnit(timeToReachTargets.downTarget)})
+  • **Weighted average:** ${expectedReturn.weightedAverage > 0 ? '+' : ''}${formatPercentage(expectedReturn.weightedAverage)}%
+  • **Best case:** +${formatPercentage(expectedReturn.bestCase)}%
+  • **Worst case:** ${formatPercentage(expectedReturn.worstCase)}%
+  
+  **⏱️ Time Analysis:**
+  • Time-based duration: ${formatTimeUnit(durationInDays)}
+  • Expected time to up target: ${formatTimeUnit(timeToReachTargets.upTarget)} (${formatPercentage(upTargetAnalysis.probability * 100)}% probability)
+  • Expected time to down target: ${formatTimeUnit(timeToReachTargets.downTarget)} (${formatPercentage(downTargetAnalysis.probability * 100)}% probability)
+  • Average expected time: ${formatTimeUnit(timeToReachTargets.averageTime)}
+  
+  **🎯 Target Analysis:**
+  **Up Target ($${formatCurrency(upTarget)}):**
+  • Confidence: ${formatPercentage(upTargetAnalysis.confidence * 100)}%
+  • Risk factors: ${upTargetAnalysis.riskFactors.length > 0 ? upTargetAnalysis.riskFactors.join(', ') : 'None'}
+  • Market conditions: ${upTargetAnalysis.marketConditions.length > 0 ? upTargetAnalysis.marketConditions.join(', ') : 'Favorable'}
+  
+  **Down Target ($${formatCurrency(downTarget)}):**
+  • Confidence: ${formatPercentage(downTargetAnalysis.confidence * 100)}%
+  • Risk factors: ${downTargetAnalysis.riskFactors.length > 0 ? downTargetAnalysis.riskFactors.join(', ') : 'None'}
+  • Market conditions: ${downTargetAnalysis.marketConditions.length > 0 ? downTargetAnalysis.marketConditions.join(', ') : 'Favorable'}
+  
+  **📋 Insights:**
+  ${insights.map((insight: string, index: number) => `${index + 1}. ${insight}`).join('\n')}
+  
+  **💡 Recommendations:**
+  ${recommendations.map((rec: string, index: number) => `${index + 1}. ${rec}`).join('\n')}
+  
+  **🔍 Behavioral Analysis:**
+  ${timeBasedAnalysis.behavioralInsights.map((insight: string) => `• ${insight}`).join('\n')}
+  
+  **📊 Market Conditions:**
+  ${timeBasedAnalysis.marketConditions.map((condition: string) => `• ${condition}`).join('\n')}
+  
+  **🎭 Fear & Greed Insights:**
+  ${timeBasedAnalysis.fearGreedInsights.length > 0 ? timeBasedAnalysis.fearGreedInsights.map((insight: string, index: number) => `${index + 1}. ${insight}`).join('\n') : '• Market sentiment data unavailable'}
+  
+  This combined strategy provides maximum flexibility with both time and price-based exit conditions. The analysis shows which exit scenario is most likely and provides comprehensive risk assessment for your commitment strategy.`;
 }
