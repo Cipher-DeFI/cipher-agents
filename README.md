@@ -1,10 +1,10 @@
-# FUM AI Agents - Vault Locking Commitment Analysis
+# Cipher AI Agents - Vault Commitment Analysis
 
 A sophisticated AI-powered commitment analysis system for supported crypto tokens, designed to help users make informed decisions about locking their crypto assets for behavioral improvement and long-term holding strategies.
 
-## 🏔️ What is FUM AI Agents?
+## 🔐 What is Cipher AI Agents?
 
-FUM AI Agents is an intelligent system that analyzes crypto vault locking commitment proposals using real market data, behavioral psychology insights, and the Fear & Greed Index. It provides comprehensive analysis for users who want to lock their supported tokens to improve their trading behavior and avoid emotional decision-making.
+Cipher AI Agents is an intelligent system that analyzes crypto vault commitment proposals using real market data, behavioral psychology insights, and the Fear & Greed Index. It provides comprehensive analysis for users who want to encode their commitment into secure vaults, improving their trading behavior and avoiding emotional decision-making.
 
 ## ✨ Key Features
 
@@ -56,7 +56,7 @@ FUM AI Agents is an intelligent system that analyzes crypto vault locking commit
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd fum-ai-agents
+cd cipher-ai-agents
 
 # Install dependencies
 bun install
@@ -114,8 +114,8 @@ The API returns structured data with AI analysis:
   "success": true,
   "data": {
     "response": "AI formatted analysis text",
-    "action": "FUM_ANALYZE_COMMITMENT",
-    "character": "FUM Advisor",
+    "action": "CIPHER_ANALYZE_COMMITMENT",
+    "character": "Cipher Advisor",
     "analysis": {
       "score": 75,
       "recommendation": "RECOMMENDED",
@@ -159,8 +159,8 @@ The wallet analysis endpoint returns comprehensive trading behavior insights:
   "success": true,
   "data": {
     "response": "AI formatted wallet analysis text",
-    "action": "FUM_ANALYZE_WALLET",
-    "character": "FUM Advisor",
+    "action": "CIPHER_ANALYZE_WALLET",
+    "character": "Cipher Advisor",
     
     // 1. Risk Score (0-100)
     "riskScore": 65.5,
@@ -226,8 +226,8 @@ The vaults analysis endpoint returns comprehensive community insights:
   "success": true,
   "data": {
     "response": "AI formatted vaults analysis text",
-    "action": "FUM_ANALYZE_VAULTS",
-    "character": "FUM Advisor",
+    "action": "CIPHER_ANALYZE_VAULTS",
+    "character": "Cipher Advisor",
     
     // Overview Statistics
     "totalVaults": 10,
